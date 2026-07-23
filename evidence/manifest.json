@@ -1,0 +1,77 @@
+{
+  "$schema_note": "Machine-readable index of the demonstration evidence in this directory.",
+  "generator": {
+    "command": "uv run --project backend python evidence/generate_fixture.py",
+    "script": "evidence/generate_fixture.py",
+    "provider": "mock, driven by a curated deterministic script of candidate and analysis responses (no network, no API key, no wall-clock dependence in output)"
+  },
+  "source_snapshot_commit": "82ed65dc01c2484ce16db9db96cb7a0773900263",
+  "extraction_root_commit": "04906b0",
+  "backend_schema_version": 4,
+  "determinism": "Raw database ids (uuid4) and wall-clock timestamps are inherently non-deterministic; the generator canonicalizes every id, timestamp, and content-derived fingerprint into stable tokens (in order of first appearance) before writing evidence/. Re-running the generator against the same source_snapshot_commit reproduces byte-identical files, verified by the sha256 hashes below.",
+  "outputs": [
+    {
+      "path": "evidence/fixture/loop.json",
+      "sha256": "cd79853f5e262f9ce036a25715dc3737355c1bdcc5d149c63ce7d60dae25ec31"
+    },
+    {
+      "path": "evidence/fixture/receipts/memory_receipt_1.md",
+      "sha256": "7e535b3cd9d056644b1970e5cb990e72a74a57618d8c2cbc366f2654f6907c56"
+    },
+    {
+      "path": "evidence/fixture/receipts/memory_receipt_2.md",
+      "sha256": "918419fbedfaa28e64aa73c042b1bc5f97ae6a9c4ac18352887d20cc256e3ec1"
+    },
+    {
+      "path": "evidence/fixture/receipts/session_receipt.md",
+      "sha256": "7fca7c9d5f12b9705764474ebba7953b9befbd0eb8795851e986b4f2d8974565"
+    }
+  ],
+  "claims_supported": {
+    "workspace/project/skill creation": [
+      "create_workspace",
+      "create_project",
+      "create_skill"
+    ],
+    "initial candidate batch (comparison set)": [
+      "generate_first_batch"
+    ],
+    "one clear natural-language judgment": [
+      "judge_candidate_1",
+      "judge_candidate_2",
+      "judge_candidate_3"
+    ],
+    "feedback analysis into pending proposals": [
+      "analyze_judgment_1",
+      "analyze_judgment_2",
+      "analyze_judgment_3"
+    ],
+    "accept decision": [
+      "accept_proposal_one_transformation",
+      "accept_proposal_no_stacking",
+      "accept_proposal_tactile_detail"
+    ],
+    "edit decision": [
+      "edit_proposal_product_legible",
+      "accept_edited_proposal_product_legible"
+    ],
+    "reject decision": [
+      "reject_proposal_no_amber_green"
+    ],
+    "pending proposals rail before a human decision": [
+      "pending_proposal_prop_limit"
+    ],
+    "a subsequent batch conditioned on accepted memory": [
+      "generate_next_batch"
+    ],
+    "provenance receipt": [
+      "memory_ledger",
+      "memory_timeline",
+      "memory_receipt_1",
+      "memory_receipt_2"
+    ],
+    "a provenance or session receipt": [
+      "session_receipt"
+    ]
+  }
+}

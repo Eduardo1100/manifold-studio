@@ -1,0 +1,2494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Manifold Studio · Idea Search</title>
+<meta name="description" content="Compare prompt candidates, explain what works, and decide what carries into the next round." />
+<link rel="canonical" href="https://eduardo1100.github.io/manifold-studio/" />
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=c9572b6fbd06" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Manifold Studio · Idea Search" />
+<meta property="og:description" content="Compare prompt candidates, explain what works, and decide what carries into the next round." />
+<meta property="og:url" content="https://eduardo1100.github.io/manifold-studio/" />
+<meta property="og:image" content="https://eduardo1100.github.io/manifold-studio/social-preview.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Manifold Studio Idea Search — Compare prompt candidates, explain what works, and decide what carries into the next round." />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Manifold Studio · Idea Search" />
+<meta name="twitter:description" content="Compare prompt candidates, explain what works, and decide what carries into the next round." />
+<meta name="twitter:image" content="https://eduardo1100.github.io/manifold-studio/social-preview.png" />
+<meta name="twitter:image:alt" content="Manifold Studio Idea Search — Compare prompt candidates, explain what works, and decide what carries into the next round." />
+<style>
+
+/* ===========================================================================
+   Manifold Studio -- Idea Search showcase stylesheet.
+
+   Visual tokens below (palette, gradients, glow, typography, borders, button
+   treatment, card surfaces) are the approved Manifold baseline, carried over
+   unchanged. This pass changed POSITIONING only: the page is now a
+   projection of the real product's cockpit rather than a landing page.
+
+   Layout transplanted from frontend/src/App.css and its components:
+
+     - .topbar / .app-nav / .context-row   <- AppLayout.tsx + BreadcrumbSwitcher.tsx
+                                              (two-level header: brand + sections,
+                                              then the cockpit context row)
+     - .stage-panel three-column grid      <- App.css `.loop-layout-three`
+                                              (340px | minmax(0,1fr) | 320px),
+                                              including its 1360/1100 breakpoints
+     - .recipe-rail                        <- RecipeRail.tsx (sticky terminus:
+                                              Generate at the bottom)
+     - .batch-group / .batch-slate /
+       .sheet-grid / .sheet-card           <- BatchGroupSection.tsx, CandidateCard.tsx
+     - .focused-candidate / .focused-head /
+       .focused-columns / .focused-judgment <- FocusedCandidate.tsx
+     - .pending-rail / .proposal-card      <- PendingProposalRail.tsx,
+                                              InlineProposalList.tsx
+     - .ledger-card / .teaching-* /
+       .timeline-*                         <- MemoryLedgerPanel.tsx,
+                                              MemoryCorpusEditor.tsx,
+                                              TeachingSetPanel.tsx,
+                                              MemoryTimelinePanel.tsx
+     - .chain                              <- LedgerDetailDrawerPanel.tsx
+
+   Deviations from the product, and why:
+     - Dark only. The product persists a light/dark toggle to localStorage;
+       a static page cannot, and the brand shell is deliberately dark.
+     - No external font requests; only the product's system fallback chains.
+     - Every control is inert. Rails render recorded values, so there are no
+       textareas, selects, or steppers -- just their resolved state.
+     - Rails are sticky but never scroll internally: the projected content is
+       short, and nested scrollbars are a product bug not worth copying.
+   =========================================================================== */
+
+:root {
+  /* Shell: deep navy/black. */
+  --ink-1000: #04060f;
+  --ink-950: #060915;
+  --ink-900: #070b18;
+  --ink-850: #0c1224;
+  --ink-800: #101830;
+
+  /* Midnight borders. */
+  --line: rgba(125, 155, 220, 0.13);
+  --line-2: rgba(125, 155, 220, 0.22);
+  --line-strong: rgba(125, 155, 220, 0.34);
+
+  --text: #f2f6ff;
+  --text-dim: #9fb0d0;
+  --text-faint: #7d8fb3;
+
+  --cyan: #22d3ee;
+  --blue: #3b82f6;
+  --violet: #8b5cf6;
+  --accent: var(--cyan);
+  --accent-soft: rgba(34, 211, 238, 0.1);
+  --accent-line: rgba(59, 130, 246, 0.34);
+
+  /* Action gradient: darker than the mark gradient so white text clears
+     4.5:1 at both ends. */
+  --grad-action: linear-gradient(135deg, #2563eb 0%, #6d3ff0 55%, #7c3aed 100%);
+
+  --positive: #34d399;
+  --negative: #fb7185;
+
+  --font-display: "Iowan Old Style", Georgia, serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --r-sm: 10px;
+  --r-md: 13px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  --shadow: 0 26px 60px -42px rgba(0, 0, 0, 0.95);
+  --glow: 0 0 0 1px rgba(59, 130, 246, 0.06), 0 18px 46px -34px rgba(37, 99, 235, 0.5);
+
+  --shell-max: 1680px;
+  --gutter: clamp(14px, 2.4vw, 40px);
+  --shell: min(var(--shell-max), calc(100% - var(--gutter) * 2));
+
+  /* Sticky offset = topbar height, so rails clear the two-level header. */
+  --topbar-h: 5.9rem;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation: none !important; transition: none !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--ink-1000);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  line-height: 1.6;
+  letter-spacing: -0.006em;
+  overflow-x: hidden;
+}
+
+a { color: var(--cyan); text-decoration: none; }
+a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 4px; }
+
+h1, h2, h3, h4 { letter-spacing: -0.024em; }
+
+.mono { font-family: var(--font-mono); letter-spacing: 0.01em; }
+.muted-copy { color: var(--text-dim); }
+
+.eyebrow {
+  margin: 0;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.surface {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--ink-800);
+  padding: 0.85rem 0.9rem;
+}
+
+.ghost-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.34rem 0.7rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  color: var(--text-dim);
+  font-size: 0.78rem;
+}
+.ghost-button:hover { border-color: var(--line-strong); color: var(--text); }
+
+/* ---- Shell ------------------------------------------------------------ */
+.app { position: relative; min-height: 100vh; isolation: isolate; }
+
+.app-glow {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(58rem 30rem at 8% -10%, rgba(34, 211, 238, 0.1), transparent 62%),
+    radial-gradient(52rem 30rem at 78% -14%, rgba(124, 58, 237, 0.13), transparent 60%),
+    var(--ink-1000);
+}
+
+/* ---- Two-level header (AppLayout.tsx) --------------------------------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(6, 9, 21, 0.86);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(18px) saturate(140%);
+}
+
+.topbar-row {
+  width: var(--shell);
+  margin-inline: auto;
+  min-height: 3.4rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.brand { display: inline-flex; align-items: center; gap: 0.55rem; color: var(--text); }
+.brand-mark { display: block; flex: none; height: 26px; width: auto; }
+.brand-name { font-size: 1.06rem; font-weight: 650; letter-spacing: -0.028em; color: #fff; }
+.brand-product {
+  margin-left: 0.2rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--line-2);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.app-nav { margin-left: auto; display: flex; gap: 0.1rem; }
+.app-nav-link {
+  padding: 0.4rem 0.72rem;
+  border-radius: var(--r-sm);
+  color: var(--text-dim);
+  font-size: 0.84rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.app-nav-link:hover { color: var(--text); background: rgba(125, 155, 220, 0.09); }
+
+/* Context row: inert chips, deliberately not dropdowns. */
+.context-row {
+  width: var(--shell);
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-bottom: 0.55rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.context-row::-webkit-scrollbar { display: none; }
+.context-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex: none;
+  padding: 0.24rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: rgba(125, 155, 220, 0.05);
+}
+.context-chip-key {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.context-chip-value { color: var(--text-dim); font-size: 0.78rem; white-space: nowrap; }
+.context-chip:last-of-type .context-chip-value { color: var(--cyan); }
+.context-static {
+  flex: none;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.app-main { width: var(--shell); margin-inline: auto; padding: 1.1rem 0 3rem; }
+
+/* ---- Compact title band ------------------------------------------------ */
+.title-band { padding: 0.3rem 0 1rem; }
+.title-band h1 {
+  margin: 0.45rem 0 0.4rem;
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  font-weight: 600;
+  line-height: 1.12;
+  color: #fff;
+}
+.hero-sub { margin: 0 0 0.65rem; color: var(--text-dim); font-size: 0.95rem; max-width: 64ch; }
+.method-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+.method-link:hover { color: var(--cyan); }
+
+/* ---- Workspace bar + stage switcher ------------------------------------ */
+.region { scroll-margin-top: calc(var(--topbar-h) + 0.5rem); }
+.region-loop { margin-top: 0.2rem; }
+
+.workspace-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding-bottom: 0.75rem;
+}
+.workspace-intro { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.9rem; }
+.workspace-intro-title { margin: 0; color: var(--text); font-size: 0.92rem; font-weight: 600; }
+.workspace-intro-sub { margin: 0; color: var(--text-faint); font-size: 0.8rem; }
+.workspace-note { margin: 0 0 0 auto; color: var(--text-faint); font-size: 0.75rem; }
+
+/* Six two-level controls. The ordinal, title, and description all sit inside
+   the anchor, so the whole block is one obvious hit target rather than a
+   label with a caption floating near it. */
+.stage-switcher { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.4rem; }
+.stage-tab {
+  --tab-no: var(--text-faint);
+  --tab-title: var(--text-dim);
+  --tab-desc: var(--text-faint);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 0.4rem;
+  row-gap: 0.12rem;
+  padding: 0.5rem 0.7rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: rgba(125, 155, 220, 0.03);
+  cursor: pointer;
+}
+.stage-tab-no {
+  grid-column: 1;
+  color: var(--tab-no);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+}
+.stage-tab-title { grid-column: 2; color: var(--tab-title); font-size: 0.84rem; font-weight: 600; }
+.stage-tab-desc {
+  grid-column: 2;
+  color: var(--tab-desc);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+.stage-tab:hover {
+  --tab-title: var(--text);
+  --tab-desc: var(--text-dim);
+  border-color: var(--line-strong);
+  background: rgba(125, 155, 220, 0.09);
+}
+.stage-tab:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+/* Secondary continuation control at the foot of each stage. */
+.stage-next {
+  grid-column: 1 / -1;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+  padding: 0.38rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--text-dim);
+  font-size: 0.79rem;
+}
+.stage-next:hover { border-color: var(--accent-line); color: var(--cyan); }
+
+/* ---- The three-column cockpit (App.css .loop-layout-three) ------------- */
+.stage-panel {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr) 320px;
+  gap: clamp(1.1rem, 1.6vw, 2rem);
+  align-items: start;
+  /* Anchor navigation must clear the two-level sticky header, or the
+     focused-candidate head lands underneath it. */
+  scroll-margin-top: calc(var(--topbar-h) + 3.2rem);
+}
+
+/* One stage at a time, driven by :target -- no script. Without :has()
+   support the panels simply stack, which is still a readable walkthrough. */
+@supports selector(:has(*)) {
+  .region-loop .stage-panel:not(.is-default) { display: none; }
+  .region-loop:has(.stage-panel:target) .stage-panel { display: none; }
+  .region-loop:has(.stage-panel:target) .stage-panel:target { display: grid; }
+  .region-loop:not(:has(.stage-panel:target)) .stage-tab.is-default-tab {
+    --tab-no: var(--cyan);
+    --tab-title: var(--text);
+    --tab-desc: var(--text-dim);
+    background: var(--accent-soft);
+    border-color: var(--accent-line);
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
+  }
+  .region-loop:has(#stage-compare:target) .stage-tab[href="#stage-compare"] {
+    --tab-no: var(--cyan);
+    --tab-title: var(--text);
+    --tab-desc: var(--text-dim);
+    background: var(--accent-soft);
+    border-color: var(--accent-line);
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
+  }
+  .region-loop:has(#stage-judge:target) .stage-tab[href="#stage-judge"] {
+    --tab-no: var(--cyan);
+    --tab-title: var(--text);
+    --tab-desc: var(--text-dim);
+    background: var(--accent-soft);
+    border-color: var(--accent-line);
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
+  }
+  .region-loop:has(#stage-propose:target) .stage-tab[href="#stage-propose"] {
+    --tab-no: var(--cyan);
+    --tab-title: var(--text);
+    --tab-desc: var(--text-dim);
+    background: var(--accent-soft);
+    border-color: var(--accent-line);
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
+  }
+  .region-loop:has(#stage-decide:target) .stage-tab[href="#stage-decide"] {
+    --tab-no: var(--cyan);
+    --tab-title: var(--text);
+    --tab-desc: var(--text-dim);
+    background: var(--accent-soft);
+    border-color: var(--accent-line);
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
+  }
+  .region-loop:has(#stage-regenerate:target) .stage-tab[href="#stage-regenerate"] {
+    --tab-no: var(--cyan);
+    --tab-title: var(--text);
+    --tab-desc: var(--text-dim);
+    background: var(--accent-soft);
+    border-color: var(--accent-line);
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
+  }
+  .region-loop:has(#stage-trace:target) .stage-tab[href="#stage-trace"] {
+    --tab-no: var(--cyan);
+    --tab-title: var(--text);
+    --tab-desc: var(--text-dim);
+    background: var(--accent-soft);
+    border-color: var(--accent-line);
+    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.18);
+  }
+}
+.region-loop .stage-panel + .stage-panel { margin-top: 1.6rem; }
+
+.canvas-col { min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
+
+/* ---- Recipe rail (RecipeRail.tsx) -------------------------------------- */
+.recipe-rail,
+.pending-rail {
+  position: sticky;
+  top: calc(var(--topbar-h) + 0.6rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0.9rem 0.95rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--ink-850);
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.recipe-rail-title,
+.panel-head .eyebrow { margin: 0; }
+.recipe-rail-title {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.recipe-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.34rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.recipe-row-key {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.recipe-row-value { color: var(--text); font-size: 0.8rem; text-align: right; }
+.recipe-row-stack { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+.recipe-row-stack .recipe-row-value { text-align: left; }
+.recipe-row-value.is-empty { color: var(--text-faint); }
+.recipe-row-model { color: var(--cyan); }
+
+.recipe-field { display: flex; flex-direction: column; gap: 0.35rem; }
+.recipe-brief {
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.recipe-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+.recipe-field-small { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+.recipe-chip {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.recipe-memory { display: flex; flex-direction: column; gap: 0.45rem; }
+.recipe-memory-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+.recipe-memory-count { color: var(--text-dim); font-family: var(--font-mono); font-size: 0.68rem; }
+.recipe-memory-modes { display: flex; gap: 0.25rem; }
+.recipe-memory-mode {
+  flex: 1;
+  padding: 0.26rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-align: center;
+}
+.recipe-memory-mode.is-active { border-color: var(--accent-line); background: var(--accent-soft); color: var(--cyan); }
+.recipe-memory-note { margin: 0; color: var(--text-dim); font-size: 0.76rem; line-height: 1.5; }
+.recipe-memory-picker { display: flex; flex-direction: column; gap: 0.3rem; }
+.recipe-memory-item {
+  display: flex;
+  gap: 0.45rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-dim);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+.recipe-memory-check { color: var(--positive); flex: none; }
+.recipe-memory-state { margin: 0; color: var(--text-faint); font-size: 0.68rem; }
+.recipe-memory-state code { color: var(--text-dim); }
+
+.recipe-rail-footer { margin-top: auto; display: flex; flex-direction: column; gap: 0.4rem; }
+.generate-key {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.6rem 0.95rem;
+  border-radius: var(--r-sm);
+  background: var(--grad-action);
+  color: #fff;
+  box-shadow: 0 14px 30px -20px rgba(59, 130, 246, 0.95);
+}
+.generate-key-label { font-size: 0.9rem; font-weight: 650; }
+.generate-key-subtitle { font-size: 0.7rem; opacity: 0.86; }
+.generate-key-reason { margin: 0; color: var(--text-faint); font-size: 0.68rem; }
+
+/* ---- Batch group + contact sheet --------------------------------------- */
+.batch-group {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--ink-850);
+  box-shadow: var(--shadow), var(--glow);
+  overflow: hidden;
+}
+.batch-slate,
+.canvas-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.9rem;
+  padding: 0.65rem 0.95rem;
+  border-bottom: 1px solid var(--line);
+  background: rgba(125, 155, 220, 0.035);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
+}
+.batch-slate { flex-direction: column; gap: 0.3rem; }
+.batch-slate-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3rem 0.9rem; }
+.batch-slate-no,
+.canvas-head-no { color: var(--cyan); letter-spacing: 0.14em; }
+.batch-slate-model { color: var(--text); }
+.batch-slate-brief,
+.canvas-head-brief {
+  flex: 1 1 14rem;
+  min-width: 0;
+  color: var(--text-dim);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-style: italic;
+  letter-spacing: normal;
+}
+.batch-slate-fp, .batch-slate-stamp { color: var(--text-faint); }
+
+.sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11.5rem), 1fr));
+  gap: 0.7rem;
+  padding: 0.9rem;
+}
+.sheet-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 9.5rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--ink-800);
+}
+.sheet-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.sheet-card-id { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; color: var(--cyan); }
+.sheet-card-state {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.sheet-card-prompt {
+  margin: 0;
+  font-size: 0.81rem;
+  line-height: 1.5;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sheet-card-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--text-faint);
+}
+.sheet-card-open {
+  align-self: flex-start;
+  padding: 0.28rem 0.62rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  color: var(--text-dim);
+  font-size: 0.74rem;
+}
+.sheet-card-open:hover { border-color: var(--accent-line); color: var(--cyan); }
+
+.batch-footer { padding: 0 0.9rem 0.9rem; }
+.batch-footer p { margin: 0; font-size: 0.8rem; }
+
+/* ---- Focused candidate (FocusedCandidate.tsx) -------------------------- */
+.focused-candidate {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--ink-850);
+  box-shadow: var(--shadow), var(--glow);
+}
+.focused-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.focused-title { color: var(--text); font-size: 0.9rem; font-weight: 600; }
+.focused-versions { margin-left: auto; display: flex; gap: 0.25rem; }
+.focused-version {
+  padding: 0.22rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+}
+.focused-version.is-active { border-color: var(--accent-line); background: var(--accent-soft); color: var(--cyan); }
+
+.focused-siblings { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.focused-sibling {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.24rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+}
+.focused-sibling em { font-style: normal; opacity: 0.7; }
+.focused-sibling.is-judged { color: var(--text-dim); }
+.focused-sibling.is-active { border-color: var(--accent-line); background: var(--accent-soft); color: var(--cyan); }
+
+.focused-columns { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 0.8rem; }
+.focused-prompt-text { margin: 0.5rem 0 0.5rem; color: var(--text); font-size: 0.85rem; line-height: 1.55; }
+.focused-provenance { margin: 0; color: var(--text-faint); font-size: 0.68rem; }
+.focused-evidence-empty { margin: 0.5rem 0 0; font-size: 0.8rem; line-height: 1.5; }
+
+.focused-judgment { display: flex; flex-direction: column; gap: 0.6rem; }
+.judgment { display: flex; flex-direction: column; gap: 0.35rem; padding-left: 0.85rem; border-left: 2px solid var(--accent-line); }
+.judgment-text {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #eaf1ff;
+}
+.judgment-ref { margin: 0; color: var(--text-faint); font-size: 0.66rem; letter-spacing: 0.05em; }
+.judgment-empty { margin: 0; font-size: 0.82rem; }
+
+/* ---- Pending memory rail (PendingProposalRail.tsx) --------------------- */
+.pending-rail-head { display: flex; align-items: center; gap: 0.5rem; }
+.pending-rail-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.pending-rail-empty { margin: 0; font-size: 0.82rem; line-height: 1.5; }
+.pending-rail-note { margin: 0; color: var(--text-dim); font-size: 0.78rem; line-height: 1.5; }
+.pending-rail-list { display: flex; flex-direction: column; gap: 0.8rem; }
+.pending-rail-entry { display: flex; flex-direction: column; gap: 0.3rem; }
+.pending-rail-source { margin: 0; color: var(--text-faint); font-size: 0.62rem; letter-spacing: 0.06em; }
+.pending-rail-quote {
+  margin: 0 0 0.15rem;
+  padding-left: 0.55rem;
+  border-left: 2px solid var(--line-2);
+  color: var(--text-faint);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.proposal-card {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 0.7rem 0.75rem;
+  background: var(--ink-800);
+}
+.proposal-meta { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.5rem; }
+.proposal-meta span {
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  padding: 0.16rem 0.45rem;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.proposal-state.is-drafted { border-color: var(--accent-line); color: #8fdcf5; }
+.proposal-state.is-accepted, .proposal-state.is-accepted-edited { border-color: rgba(52, 211, 153, 0.4); color: var(--positive); }
+.proposal-state.is-rejected { border-color: rgba(251, 113, 133, 0.4); color: var(--negative); }
+.proposal-state.is-pending { border-color: var(--line-strong); color: var(--text-dim); }
+.proposal-content { margin: 0; color: var(--text); font-size: 0.83rem; line-height: 1.5; }
+.proposal-note { margin: 0.4rem 0 0; color: var(--text-faint); font-size: 0.73rem; line-height: 1.45; }
+
+.proposal-diff { display: flex; flex-direction: column; gap: 0.35rem; }
+.proposal-diff-row { display: flex; flex-direction: column; gap: 0.15rem; margin: 0; }
+.proposal-diff-key {
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.proposal-diff-old { color: var(--text-faint); font-size: 0.8rem; text-decoration: line-through; text-decoration-color: var(--negative); }
+.proposal-diff-new { color: var(--text); font-size: 0.83rem; line-height: 1.5; }
+
+/* ---- What changed (WhatChangedPanel.tsx) ------------------------------- */
+.what-changed {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem 1.2rem;
+  align-items: center;
+  margin: 0.9rem 0.9rem 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: rgba(34, 211, 238, 0.045);
+}
+.what-changed-metric { display: flex; align-items: baseline; gap: 0.55rem; }
+.what-changed-metric strong {
+  font-size: 1.6rem;
+  line-height: 1;
+  background: linear-gradient(140deg, var(--cyan), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.what-changed-metric span { max-width: 9rem; color: var(--text-dim); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.what-changed-groups { display: flex; flex-direction: column; gap: 0.6rem; min-width: 0; }
+.what-changed-group h4 { margin: 0; color: var(--text); font-size: 0.79rem; }
+.what-changed-group ul { margin: 0.3rem 0 0; padding-left: 1.1rem; color: var(--text-dim); font-size: 0.81rem; }
+.what-changed-link { margin: 0.7rem 0.9rem 0; color: var(--text-faint); font-size: 0.68rem; line-height: 1.5; }
+
+/* ---- Trace chain (LedgerDetailDrawerPanel.tsx) ------------------------- */
+.trace-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--ink-850);
+  box-shadow: var(--shadow), var(--glow);
+  overflow: hidden;
+}
+.chain { margin: 0; padding: 0.9rem; list-style: none; display: grid; gap: 0.4rem; }
+.chain-node {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: rgba(125, 155, 220, 0.035);
+}
+.chain-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+.chain-body { min-width: 0; }
+.chain-label {
+  display: block;
+  color: var(--text-faint);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.chain-body strong { display: block; color: var(--text); font-size: 0.8rem; font-weight: 500; overflow-wrap: anywhere; }
+.chain-detail { display: block; margin-top: 0.15rem; color: var(--text-dim); font-size: 0.76rem; line-height: 1.45; }
+
+.receipt-links { display: flex; flex-direction: column; gap: 0.3rem; }
+.receipt-link {
+  color: var(--text-dim);
+  font-size: 0.76rem;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+}
+.receipt-link:hover { color: var(--cyan); text-decoration-color: var(--cyan); }
+
+/* ---- Secondary regions -------------------------------------------------- */
+.region-head { margin: 2.6rem 0 0.9rem; padding-top: 1.4rem; border-top: 1px solid var(--line); }
+.region-head h2 { margin: 0 0 0.2rem; font-size: 1.1rem; font-weight: 600; color: var(--text); }
+.region-note { margin: 0; color: var(--text-faint); font-size: 0.83rem; }
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--ink-850);
+  min-width: 0;
+}
+.panel-head { display: flex; align-items: center; gap: 0.5rem; }
+.panel-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  padding: 0 0.3rem;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+.panel h3 { margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--text); }
+.panel p { margin: 0; color: var(--text-dim); font-size: 0.84rem; line-height: 1.55; }
+.panel-note { color: var(--text-faint) !important; font-size: 0.78rem !important; }
+
+.memory-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.history-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.method-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.panel-wide { grid-column: 1 / -1; }
+
+.ledger-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.ledger-card { border: 1px solid var(--accent-line); border-radius: var(--r-md); padding: 0.8rem 0.85rem; background: var(--ink-800); }
+.ledger-card-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.ledger-card-content { margin: 0.5rem 0 0 !important; color: var(--text) !important; font-size: 0.85rem !important; }
+.ledger-lifecycle { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.55rem; }
+.lifecycle-badge, .lifecycle-chip {
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  padding: 0.14rem 0.45rem;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.57rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.lifecycle-badge.is-active { border-color: rgba(52, 211, 153, 0.4); color: var(--positive); }
+.ledger-evidence-row { display: flex; flex-direction: column; gap: 0.2rem; margin-top: 0.6rem; padding-top: 0.55rem; border-top: 1px solid var(--line); }
+.ledger-evidence-row strong { color: var(--cyan); font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.ledger-evidence-row span { color: var(--text-dim); font-size: 0.78rem; line-height: 1.45; }
+
+.teaching-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.teaching-row { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.6rem 0.65rem; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--ink-800); }
+.teaching-row p { margin: 0; font-size: 0.81rem !important; color: var(--text) !important; }
+.teaching-state { font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-faint); }
+.teaching-state.is-accepted, .teaching-state.is-accepted-edited { color: var(--positive); }
+.teaching-state.is-rejected { color: var(--negative); }
+.teaching-weight { color: var(--text-faint); font-family: var(--font-mono); font-size: 0.6rem; }
+.teaching-old { color: var(--text-faint); text-decoration: line-through; text-decoration-color: var(--negative); }
+.teaching-arrow { color: var(--cyan); padding: 0 0.2rem; }
+
+.timeline-list { margin: 0; padding: 0 0 0 0.7rem; list-style: none; display: flex; flex-direction: column; gap: 0.5rem; border-left: 1px solid var(--line); }
+.timeline-event { position: relative; display: flex; gap: 0.5rem; }
+.timeline-marker { position: absolute; left: -0.95rem; top: 0.5rem; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--accent-line); }
+.timeline-card { min-width: 0; }
+.timeline-card-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; }
+.timeline-card-head h4 { margin: 0; font-size: 0.79rem; font-weight: 600; color: var(--text); }
+.timeline-card-head span { color: var(--text-faint); font-size: 0.62rem; }
+.timeline-card p { margin: 0.15rem 0 0; color: var(--text-dim); font-size: 0.77rem !important; line-height: 1.45; }
+
+.recap-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.recap-table th, .recap-table td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--line); }
+.recap-table th { color: var(--text-faint); font-weight: 500; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.recap-table td { color: var(--text-dim); }
+
+.disclosure { border-left: 2px solid var(--accent-line); padding: 0.1rem 0 0.1rem 0.8rem; }
+.limitations-list { margin: 0; color: var(--text-dim); font-size: 0.84rem; padding-left: 1.1rem; line-height: 1.55; }
+.limitations-list li { margin-bottom: 0.4rem; }
+
+.method-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1rem; }
+.evidence-table { width: 100%; border-collapse: collapse; font-size: 0.76rem; display: block; overflow-x: auto; }
+.evidence-table caption { text-align: left; color: var(--text-faint); margin-bottom: 0.3rem; font-size: 0.73rem; }
+.evidence-table th, .evidence-table td { text-align: left; padding: 0.3rem 0.5rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.evidence-table th { color: var(--text-faint); font-weight: 500; }
+
+.regen-command {
+  font-size: 0.74rem;
+  background: var(--ink-900);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 0.6rem 0.75rem;
+  overflow-x: auto;
+  max-width: 100%;
+  color: var(--text-dim) !important;
+}
+
+.site-footer {
+  width: var(--shell);
+  margin-inline: auto;
+  padding: 1.4rem 0 3rem;
+  border-top: 1px solid var(--line);
+  color: var(--text-faint);
+  font-size: 0.79rem;
+}
+.site-footer p { margin: 0; }
+
+/* ---- Responsive (mirrors App.css's loop breakpoints) ------------------- */
+@media (max-width: 1400px) {
+  .memory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1360px) {
+  /* Recipe rail becomes a horizontal summary above the canvas; the
+     pending rail drops below it. Center stays primary. */
+  .stage-panel { grid-template-columns: minmax(0, 1fr); }
+  .recipe-rail, .pending-rail { position: static; }
+  .recipe-rail {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+    gap: 0.7rem 1.1rem;
+    align-items: start;
+  }
+  .recipe-rail-title { grid-column: 1 / -1; }
+  .recipe-rail-footer { grid-column: 1 / -1; margin-top: 0; }
+  .recipe-controls { grid-column: 1 / -1; }
+}
+
+@media (max-width: 1280px) {
+  /* Three-by-two rather than squeezing six two-line controls into one row. */
+  .stage-switcher { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 1100px) {
+  .memory-grid, .history-grid, .method-grid { grid-template-columns: 1fr; }
+  .focused-columns { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+  /* Four section links do not fit beside the wordmark at 390px; without this
+     the nav pushed the document 32px wider than the viewport. Scroll it in
+     place, exactly like .context-row, rather than dropping any destination. */
+  .app-nav {
+    gap: 0;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .app-nav::-webkit-scrollbar { display: none; }
+  .app-nav-link { padding: 0.35rem 0.5rem; font-size: 0.78rem; }
+  .topbar-row { gap: 0.6rem; }
+  .brand-product { display: none; }
+  .workspace-note { margin-left: 0; flex-basis: 100%; }
+  .recipe-rail { grid-template-columns: 1fr; }
+  .recipe-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .what-changed { grid-template-columns: 1fr; }
+  .what-changed-metric span { max-width: none; }
+  /* Sticky stage switcher stays reachable while scrolling a long stage. */
+  .workspace-bar {
+    position: sticky;
+    top: var(--topbar-h);
+    z-index: 40;
+    background: rgba(6, 9, 21, 0.94);
+    backdrop-filter: blur(14px);
+    margin-inline: calc(var(--gutter) * -1);
+    padding: 0.5rem var(--gutter);
+  }
+  /* .workspace-bar already bleeds to the gutter; the switcher must not bleed
+     again or the document itself overflows horizontally. */
+  .stage-switcher {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .stage-switcher::-webkit-scrollbar { display: none; }
+  .stage-tab { flex: 0 0 11.5rem; }
+  .workspace-note { margin-left: 0; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="app" id="top">
+  <div class="app-glow" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="topbar-row">
+      <a class="brand" href="#top" aria-label="Manifold Studio">
+        <img class="brand-mark" src="manifold-mark.png" alt="" width="32" height="26" decoding="async" />
+        <span class="brand-name">Manifold</span>
+        <span class="brand-product">Studio</span>
+      </a>
+      <nav class="app-nav" aria-label="Studio sections">
+        <a class="app-nav-link" href="#loop">Idea Search</a><a class="app-nav-link" href="#memory">Memory</a><a class="app-nav-link" href="#history">History</a><a class="app-nav-link" href="#method">Method</a>
+      </nav>
+    </div>
+    <div class="context-row" aria-label="Cockpit context (read-only)">
+      <span class="context-chip"><span class="context-chip-key">workspace</span><span class="context-chip-value">Showcase Workspace</span></span><span class="context-chip"><span class="context-chip-key">project</span><span class="context-chip-value">Citrus Launch</span></span><span class="context-chip"><span class="context-chip-key">skill</span><span class="context-chip-value">Short Product Films</span></span><span class="context-chip"><span class="context-chip-key">target model</span><span class="context-chip-value">generic</span></span>
+      <span class="context-static">read-only</span>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <section class="title-band">
+      <p class="eyebrow">Manifold Studio</p>
+      <h1>Idea Search</h1>
+      <p class="hero-sub">Compare prompt candidates, explain what works, and decide what carries into the next round.</p>
+      <a class="method-link" href="#method">Evidence and method<span aria-hidden="true">&rarr;</span></a>
+    </section>
+
+    <section class="region region-loop" id="loop">
+      <div class="workspace-bar">
+        <div class="workspace-intro">
+          <p class="workspace-intro-title">Walk through one completed loop</p>
+          <p class="workspace-intro-sub">Choose a stage to see what the creator, model, and memory contain at that moment.</p>
+          <p class="workspace-note">Static projection of one recorded session &mdash; controls show recorded values.</p>
+        </div>
+        <nav class="stage-switcher" aria-label="Workflow stage">
+          <a class="stage-tab is-default-tab" href="#stage-compare"><span class="stage-tab-no">01</span><span class="stage-tab-title">Compare</span><span class="stage-tab-desc">Review the starting set</span></a><a class="stage-tab" href="#stage-judge"><span class="stage-tab-no">02</span><span class="stage-tab-title">Judge</span><span class="stage-tab-desc">Write grounded feedback</span></a><a class="stage-tab" href="#stage-propose"><span class="stage-tab-no">03</span><span class="stage-tab-title">Propose</span><span class="stage-tab-desc">Inspect drafted guidance</span></a><a class="stage-tab" href="#stage-decide"><span class="stage-tab-no">04</span><span class="stage-tab-title">Decide</span><span class="stage-tab-desc">Accept, edit, or reject</span></a><a class="stage-tab" href="#stage-regenerate"><span class="stage-tab-no">05</span><span class="stage-tab-title">Regenerate</span><span class="stage-tab-desc">Apply accepted memory</span></a><a class="stage-tab" href="#stage-trace"><span class="stage-tab-no">06</span><span class="stage-tab-title">Trace</span><span class="stage-tab-desc">Audit what carried forward</span></a>
+        </nav>
+      </div>
+
+      <div class="loop-workspace">
+
+      <section class="stage-panel is-default" id="stage-compare" aria-label="Compare stage">
+
+      <aside class="recipe-rail" aria-label="Generation recipe">
+        <p class="recipe-rail-title">Generation recipe</p>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">target model</span>
+          <span class="recipe-row-value recipe-row-model">&#9656; generic</span>
+        </div>
+
+        <div class="recipe-field">
+          <span class="recipe-row-key">brief</span>
+          <p class="recipe-brief">Develop three visual concepts for a 16-second launch film for a new citrus fragrance. No dialogue or on-screen text. Each concept should feel tactile, premium, and feasible to shoot, with one clear visual idea.</p>
+        </div>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">reference image</span>
+          <span class="recipe-row-value is-empty">none</span>
+        </div>
+
+        <div class="recipe-controls">
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">batch size</span>
+            <span class="recipe-chip">3</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">mode</span>
+            <span class="recipe-chip">explore</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">diversity</span>
+            <span class="recipe-chip">balanced</span>
+          </div>
+        </div>
+
+        <div class="recipe-memory">
+          <div class="recipe-memory-head">
+            <span class="recipe-row-key">accepted memory</span>
+            <span class="recipe-memory-count">0 accepted</span>
+          </div>
+          <div class="recipe-memory-modes"><span class="recipe-memory-mode is-active">all</span><span class="recipe-memory-mode">selected</span><span class="recipe-memory-mode">ignore</span></div>
+          <p class="recipe-memory-note">no accepted memory yet — accepted proposals will feed future batches</p>
+
+        </div>
+
+        <div class="recipe-row recipe-row-stack">
+          <span class="recipe-row-key">candidate template</span>
+          <span class="recipe-row-value">Default candidate prompt template</span>
+        </div>
+
+        <p class="recipe-memory-state mono">
+          memory fp <code>fp_demo0001</code> &middot; 0 items
+          &middot; all
+        </p>
+
+        <div class="recipe-rail-footer">
+          <span class="generate-key" role="img"
+                aria-label="Generate — starts a new batch (recorded action)">
+            <span class="generate-key-label">Generate</span>
+            <span class="generate-key-subtitle">starts a new batch</span>
+          </span>
+          <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
+        </div>
+      </aside>
+
+        <div class="canvas-col">
+      <section class="batch-group">
+
+      <header class="batch-slate">
+        <div class="batch-slate-line">
+          <span class="batch-slate-no">BATCH 01</span>
+          <span class="batch-slate-model">&#9656; generic</span>
+          <span class="batch-slate-brief">&ldquo;Develop three visual concepts for a 16-second launch film for a new citrus fragrance. No dialogue or on-screen text. Each concept should feel tactile, premium, and feasible to shoot, with one clear visual idea.&rdquo;</span>
+        </div>
+        <div class="batch-slate-line batch-slate-line-meta">
+          <span class="batch-slate-stamp">MEMORY 0 items &middot; all</span>
+          <span class="batch-slate-fp">fp fp_demo0001</span>
+          <span>explore/balanced</span>
+          <span>3 candidates</span>
+        </div>
+      </header>
+
+        <div class="sheet-grid">
+
+        <article class="candidate-card sheet-card" data-state="unjudged">
+          <span class="sheet-card-head">
+            <span class="sheet-card-id">C1</span>
+            <span class="sheet-card-state is-unjudged">unjudged</span>
+          </span>
+          <p class="sheet-card-prompt">Macro on a chilled bottle: condensation beads gather, merge, and run, dragging a clean line down the frosted glass. A thumb of orange peel flexes just off-axis and throws a fine mist across the light. Shallow depth, slow push, cold blue-green key.</p>
+          <span class="sheet-card-foot" data-review-target="artifacts">
+            <span class="sheet-card-outputs is-empty">no outputs</span>
+            <span class="sheet-card-role">aligned</span>
+          </span>
+          <a class="sheet-card-open" href="#stage-judge">Open</a>
+        </article>
+
+        <article class="candidate-card sheet-card" data-state="unjudged">
+          <span class="sheet-card-head">
+            <span class="sheet-card-id">C2</span>
+            <span class="sheet-card-state is-unjudged">unjudged</span>
+          </span>
+          <p class="sheet-card-prompt">Hard sunlight through a slatted blind rakes across a seamless backdrop in amber and deep green. Bars of light rotate, a wedge of grapefruit spins, the shadow of a leaf sweeps past, and the palette flips to negative on the final beat.</p>
+          <span class="sheet-card-foot" data-review-target="artifacts">
+            <span class="sheet-card-outputs is-empty">no outputs</span>
+            <span class="sheet-card-role">exploratory</span>
+          </span>
+          <a class="sheet-card-open" href="#stage-judge">Open</a>
+        </article>
+
+        <article class="candidate-card sheet-card" data-state="unjudged">
+          <span class="sheet-card-head">
+            <span class="sheet-card-id">C3</span>
+            <span class="sheet-card-state is-unjudged">unjudged</span>
+          </span>
+          <p class="sheet-card-prompt">A cleared dinner table after guests have gone: linen creased, two glasses, a bowl of clementines. Over sixteen seconds the low sun crawls across the cloth, the peel curls tighten, and the room warms from grey to gold.</p>
+          <span class="sheet-card-foot" data-review-target="artifacts">
+            <span class="sheet-card-outputs is-empty">no outputs</span>
+            <span class="sheet-card-role">variation</span>
+          </span>
+          <a class="sheet-card-open" href="#stage-judge">Open</a>
+        </article>
+
+        </div>
+        <footer class="batch-footer">
+          <p class="muted-copy">Nothing judged yet &mdash; every candidate in the set is equal at this point.</p>
+        </footer>
+      </section>
+    </div>
+
+      <aside class="pending-rail" aria-label="Pending memory" data-review-target="memory-proposals">
+        <div class="pending-rail-head">
+          <p class="eyebrow">Pending memory</p>
+          <span class="pending-rail-count">0</span>
+        </div>
+        <p class="muted-copy pending-rail-empty">No pending memory. Analyze a judgment to create proposals.</p>
+
+      </aside>
+
+        <a class="stage-next" href="#stage-judge">Next: Judge<span aria-hidden="true">&rarr;</span></a>
+      </section>
+
+
+      <section class="stage-panel" id="stage-judge" aria-label="Judge stage">
+
+      <aside class="recipe-rail" aria-label="Generation recipe">
+        <p class="recipe-rail-title">Generation recipe</p>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">target model</span>
+          <span class="recipe-row-value recipe-row-model">&#9656; generic</span>
+        </div>
+
+        <div class="recipe-field">
+          <span class="recipe-row-key">brief</span>
+          <p class="recipe-brief">Develop three visual concepts for a 16-second launch film for a new citrus fragrance. No dialogue or on-screen text. Each concept should feel tactile, premium, and feasible to shoot, with one clear visual idea.</p>
+        </div>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">reference image</span>
+          <span class="recipe-row-value is-empty">none</span>
+        </div>
+
+        <div class="recipe-controls">
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">batch size</span>
+            <span class="recipe-chip">3</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">mode</span>
+            <span class="recipe-chip">explore</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">diversity</span>
+            <span class="recipe-chip">balanced</span>
+          </div>
+        </div>
+
+        <div class="recipe-memory">
+          <div class="recipe-memory-head">
+            <span class="recipe-row-key">accepted memory</span>
+            <span class="recipe-memory-count">0 accepted</span>
+          </div>
+          <div class="recipe-memory-modes"><span class="recipe-memory-mode is-active">all</span><span class="recipe-memory-mode">selected</span><span class="recipe-memory-mode">ignore</span></div>
+          <p class="recipe-memory-note">no accepted memory yet — accepted proposals will feed future batches</p>
+
+        </div>
+
+        <div class="recipe-row recipe-row-stack">
+          <span class="recipe-row-key">candidate template</span>
+          <span class="recipe-row-value">Default candidate prompt template</span>
+        </div>
+
+        <p class="recipe-memory-state mono">
+          memory fp <code>fp_demo0001</code> &middot; 0 items
+          &middot; all
+        </p>
+
+        <div class="recipe-rail-footer">
+          <span class="generate-key" role="img"
+                aria-label="Generate — starts a new batch (recorded action)">
+            <span class="generate-key-label">Generate</span>
+            <span class="generate-key-subtitle">starts a new batch</span>
+          </span>
+          <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
+        </div>
+      </aside>
+
+        <div class="canvas-col">
+      <section class="focused-candidate" data-review-target="candidates">
+        <div class="focused-head">
+          <a class="focused-back ghost-button" href="#stage-compare">&larr; Contact sheet</a>
+          <span class="focused-title">C1 &middot; aligned</span>
+          <span class="focused-versions" aria-label="Candidate versions">
+            <span class="focused-version is-active">v1</span>
+          </span>
+        </div>
+
+        <div class="focused-siblings"><span class="focused-sibling is-active is-judged">C1<em>aligned</em></span><span class="focused-sibling is-judged">C2<em>exploratory</em></span><span class="focused-sibling is-judged">C3<em>variation</em></span></div>
+
+        <div class="focused-columns">
+          <section class="focused-prompt surface">
+            <p class="eyebrow">Candidate prompt</p>
+            <p class="focused-prompt-text">Macro on a chilled bottle: condensation beads gather, merge, and run, dragging a clean line down the frosted glass. A thumb of orange peel flexes just off-axis and throws a fine mist across the light. Shallow depth, slow push, cold blue-green key.</p>
+            <p class="focused-provenance mono">prompt_demo0001</p>
+          </section>
+
+          <section class="focused-evidence surface" data-review-target="artifacts">
+            <p class="eyebrow">Output evidence</p>
+            <p class="focused-evidence-empty muted-copy">
+              No output artifact is linked to this candidate. This walkthrough
+              uses prompt candidates only.
+            </p>
+          </section>
+        </div>
+
+        <section class="focused-judgment surface">
+          <p class="eyebrow">Judgment</p>
+
+          <div class="judgment" data-review-target="feedback">
+            <p class="judgment-text">&ldquo;The condensation run is the whole idea -- one physical change I can actually shoot, and the beading reads expensive. But the bottle is never legible; I get texture and no product. Keep the transformation, end on the bottle.&rdquo;</p>
+            <p class="judgment-ref mono">saved judgment &middot; on candidate C1
+              &middot; prompt_demo0001</p>
+          </div>
+
+        </section>
+      </section>
+    </div>
+
+      <aside class="pending-rail" aria-label="Pending memory" data-review-target="memory-proposals">
+        <div class="pending-rail-head">
+          <p class="eyebrow">Pending memory</p>
+          <span class="pending-rail-count">0</span>
+        </div>
+        <p class="muted-copy pending-rail-empty">No pending memory. Analyze a judgment to create proposals.</p>
+
+      </aside>
+
+        <a class="stage-next" href="#stage-propose">Next: Propose<span aria-hidden="true">&rarr;</span></a>
+      </section>
+
+
+      <section class="stage-panel" id="stage-propose" aria-label="Propose stage">
+
+      <aside class="recipe-rail" aria-label="Generation recipe">
+        <p class="recipe-rail-title">Generation recipe</p>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">target model</span>
+          <span class="recipe-row-value recipe-row-model">&#9656; generic</span>
+        </div>
+
+        <div class="recipe-field">
+          <span class="recipe-row-key">brief</span>
+          <p class="recipe-brief">Develop three visual concepts for a 16-second launch film for a new citrus fragrance. No dialogue or on-screen text. Each concept should feel tactile, premium, and feasible to shoot, with one clear visual idea.</p>
+        </div>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">reference image</span>
+          <span class="recipe-row-value is-empty">none</span>
+        </div>
+
+        <div class="recipe-controls">
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">batch size</span>
+            <span class="recipe-chip">3</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">mode</span>
+            <span class="recipe-chip">explore</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">diversity</span>
+            <span class="recipe-chip">balanced</span>
+          </div>
+        </div>
+
+        <div class="recipe-memory">
+          <div class="recipe-memory-head">
+            <span class="recipe-row-key">accepted memory</span>
+            <span class="recipe-memory-count">0 accepted</span>
+          </div>
+          <div class="recipe-memory-modes"><span class="recipe-memory-mode is-active">all</span><span class="recipe-memory-mode">selected</span><span class="recipe-memory-mode">ignore</span></div>
+          <p class="recipe-memory-note">no accepted memory yet — accepted proposals will feed future batches</p>
+
+        </div>
+
+        <div class="recipe-row recipe-row-stack">
+          <span class="recipe-row-key">candidate template</span>
+          <span class="recipe-row-value">Default candidate prompt template</span>
+        </div>
+
+        <p class="recipe-memory-state mono">
+          memory fp <code>fp_demo0001</code> &middot; 0 items
+          &middot; all
+        </p>
+
+        <div class="recipe-rail-footer">
+          <span class="generate-key" role="img"
+                aria-label="Generate — starts a new batch (recorded action)">
+            <span class="generate-key-label">Generate</span>
+            <span class="generate-key-subtitle">starts a new batch</span>
+          </span>
+          <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
+        </div>
+      </aside>
+
+        <div class="canvas-col">
+      <section class="focused-candidate" data-review-target="candidates">
+        <div class="focused-head">
+          <a class="focused-back ghost-button" href="#stage-compare">&larr; Contact sheet</a>
+          <span class="focused-title">C1 &middot; aligned</span>
+          <span class="focused-versions" aria-label="Candidate versions">
+            <span class="focused-version is-active">v1</span>
+          </span>
+        </div>
+
+        <div class="focused-siblings"><span class="focused-sibling is-active is-judged">C1<em>aligned</em></span><span class="focused-sibling is-judged">C2<em>exploratory</em></span><span class="focused-sibling is-judged">C3<em>variation</em></span></div>
+
+        <div class="focused-columns">
+          <section class="focused-prompt surface">
+            <p class="eyebrow">Candidate prompt</p>
+            <p class="focused-prompt-text">Macro on a chilled bottle: condensation beads gather, merge, and run, dragging a clean line down the frosted glass. A thumb of orange peel flexes just off-axis and throws a fine mist across the light. Shallow depth, slow push, cold blue-green key.</p>
+            <p class="focused-provenance mono">prompt_demo0001</p>
+          </section>
+
+          <section class="focused-evidence surface" data-review-target="artifacts">
+            <p class="eyebrow">Output evidence</p>
+            <p class="focused-evidence-empty muted-copy">
+              No output artifact is linked to this candidate. This walkthrough
+              uses prompt candidates only.
+            </p>
+          </section>
+        </div>
+
+        <section class="focused-judgment surface">
+          <p class="eyebrow">Judgment</p>
+
+          <div class="judgment" data-review-target="feedback">
+            <p class="judgment-text">&ldquo;The condensation run is the whole idea -- one physical change I can actually shoot, and the beading reads expensive. But the bottle is never legible; I get texture and no product. Keep the transformation, end on the bottle.&rdquo;</p>
+            <p class="judgment-ref mono">saved judgment &middot; on candidate C1
+              &middot; prompt_demo0001</p>
+          </div>
+
+        </section>
+      </section>
+    </div>
+
+      <aside class="pending-rail" aria-label="Pending memory" data-review-target="memory-proposals">
+        <div class="pending-rail-head">
+          <p class="eyebrow">Pending memory</p>
+          <span class="pending-rail-count">6</span>
+        </div>
+        <div class="pending-rail-list">
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C1 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;The condensation run is the whole idea -- one physical change I can…&rdquo;</p>
+
+      <article class="proposal-card" data-state="drafted">
+        <div class="proposal-meta">
+          <span class="proposal-state is-drafted">drafted</span>
+          <span>preserve</span>
+          <span>style_dna</span>
+        </div>
+        <p class="proposal-content">Organize each concept around a single physical transformation that can actually be shot.</p>
+
+
+      </article>
+
+      </div>
+
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C1 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;The condensation run is the whole idea -- one physical change I can…&rdquo;</p>
+
+      <article class="proposal-card" data-state="drafted">
+        <div class="proposal-meta">
+          <span class="proposal-state is-drafted">drafted</span>
+          <span>preserve</span>
+          <span>style_dna</span>
+        </div>
+        <p class="proposal-content">End on a clean product shot.</p>
+
+
+      </article>
+
+      </div>
+
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C2 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;Too many tricks competing: rotating bars, a spinning wedge, a leaf…&rdquo;</p>
+
+      <article class="proposal-card" data-state="drafted">
+        <div class="proposal-meta">
+          <span class="proposal-state is-drafted">drafted</span>
+          <span>avoid</span>
+          <span>avoid_element</span>
+        </div>
+        <p class="proposal-content">Do not stack competing visual tricks in one sixteen-second concept.</p>
+
+
+      </article>
+
+      </div>
+
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C2 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;Too many tricks competing: rotating bars, a spinning wedge, a leaf…&rdquo;</p>
+
+      <article class="proposal-card" data-state="drafted">
+        <div class="proposal-meta">
+          <span class="proposal-state is-drafted">drafted</span>
+          <span>avoid</span>
+          <span>avoid_element</span>
+        </div>
+        <p class="proposal-content">Avoid amber and green palettes.</p>
+
+
+      </article>
+
+      </div>
+
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C3 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;The crawling sunlight is a real transformation and the creased line…&rdquo;</p>
+
+      <article class="proposal-card" data-state="drafted">
+        <div class="proposal-meta">
+          <span class="proposal-state is-drafted">drafted</span>
+          <span>preserve</span>
+          <span>style_dna</span>
+        </div>
+        <p class="proposal-content">Lead with tactile material detail rather than general atmosphere.</p>
+
+
+      </article>
+
+      </div>
+
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C3 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;The crawling sunlight is a real transformation and the creased line…&rdquo;</p>
+
+      <article class="proposal-card" data-state="drafted">
+        <div class="proposal-meta">
+          <span class="proposal-state is-drafted">drafted</span>
+          <span>preserve</span>
+          <span>style_dna</span>
+        </div>
+        <p class="proposal-content">Limit each concept to two on-screen props besides the product.</p>
+
+
+      </article>
+
+      </div>
+    </div>
+        <p class="pending-rail-note">Drafted from the judgments on the left. Nothing conditions generation until a person decides.</p>
+      </aside>
+
+        <a class="stage-next" href="#stage-decide">Next: Decide<span aria-hidden="true">&rarr;</span></a>
+      </section>
+
+
+      <section class="stage-panel" id="stage-decide" aria-label="Decide stage">
+
+      <aside class="recipe-rail" aria-label="Generation recipe">
+        <p class="recipe-rail-title">Generation recipe</p>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">target model</span>
+          <span class="recipe-row-value recipe-row-model">&#9656; generic</span>
+        </div>
+
+        <div class="recipe-field">
+          <span class="recipe-row-key">brief</span>
+          <p class="recipe-brief">Develop three visual concepts for a 16-second launch film for a new citrus fragrance. No dialogue or on-screen text. Each concept should feel tactile, premium, and feasible to shoot, with one clear visual idea.</p>
+        </div>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">reference image</span>
+          <span class="recipe-row-value is-empty">none</span>
+        </div>
+
+        <div class="recipe-controls">
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">batch size</span>
+            <span class="recipe-chip">3</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">mode</span>
+            <span class="recipe-chip">explore</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">diversity</span>
+            <span class="recipe-chip">balanced</span>
+          </div>
+        </div>
+
+        <div class="recipe-memory">
+          <div class="recipe-memory-head">
+            <span class="recipe-row-key">accepted memory</span>
+            <span class="recipe-memory-count">0 accepted</span>
+          </div>
+          <div class="recipe-memory-modes"><span class="recipe-memory-mode is-active">all</span><span class="recipe-memory-mode">selected</span><span class="recipe-memory-mode">ignore</span></div>
+          <p class="recipe-memory-note">no accepted memory yet — accepted proposals will feed future batches</p>
+
+        </div>
+
+        <div class="recipe-row recipe-row-stack">
+          <span class="recipe-row-key">candidate template</span>
+          <span class="recipe-row-value">Default candidate prompt template</span>
+        </div>
+
+        <p class="recipe-memory-state mono">
+          memory fp <code>fp_demo0001</code> &middot; 0 items
+          &middot; all
+        </p>
+
+        <div class="recipe-rail-footer">
+          <span class="generate-key" role="img"
+                aria-label="Generate — starts a new batch (recorded action)">
+            <span class="generate-key-label">Generate</span>
+            <span class="generate-key-subtitle">starts a new batch</span>
+          </span>
+          <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
+        </div>
+      </aside>
+
+        <div class="canvas-col">
+      <section class="focused-candidate" data-review-target="candidates">
+        <div class="focused-head">
+          <a class="focused-back ghost-button" href="#stage-compare">&larr; Contact sheet</a>
+          <span class="focused-title">C1 &middot; aligned</span>
+          <span class="focused-versions" aria-label="Candidate versions">
+            <span class="focused-version is-active">v1</span>
+          </span>
+        </div>
+
+        <div class="focused-siblings"><span class="focused-sibling is-active is-judged">C1<em>aligned</em></span><span class="focused-sibling is-judged">C2<em>exploratory</em></span><span class="focused-sibling is-judged">C3<em>variation</em></span></div>
+
+        <div class="focused-columns">
+          <section class="focused-prompt surface">
+            <p class="eyebrow">Candidate prompt</p>
+            <p class="focused-prompt-text">Macro on a chilled bottle: condensation beads gather, merge, and run, dragging a clean line down the frosted glass. A thumb of orange peel flexes just off-axis and throws a fine mist across the light. Shallow depth, slow push, cold blue-green key.</p>
+            <p class="focused-provenance mono">prompt_demo0001</p>
+          </section>
+
+          <section class="focused-evidence surface" data-review-target="artifacts">
+            <p class="eyebrow">Output evidence</p>
+            <p class="focused-evidence-empty muted-copy">
+              No output artifact is linked to this candidate. This walkthrough
+              uses prompt candidates only.
+            </p>
+          </section>
+        </div>
+
+        <section class="focused-judgment surface">
+          <p class="eyebrow">Judgment</p>
+
+          <div class="judgment" data-review-target="feedback">
+            <p class="judgment-text">&ldquo;The condensation run is the whole idea -- one physical change I can actually shoot, and the beading reads expensive. But the bottle is never legible; I get texture and no product. Keep the transformation, end on the bottle.&rdquo;</p>
+            <p class="judgment-ref mono">saved judgment &middot; on candidate C1
+              &middot; prompt_demo0001</p>
+          </div>
+
+        </section>
+      </section>
+    </div>
+
+      <aside class="pending-rail" aria-label="Pending memory" data-review-target="memory-proposals">
+        <div class="pending-rail-head">
+          <p class="eyebrow">Pending memory</p>
+          <span class="pending-rail-count">1</span>
+        </div>
+        <div class="pending-rail-list">
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C1 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;The condensation run is the whole idea -- one physical change I can…&rdquo;</p>
+
+      <article class="proposal-card" data-state="accepted">
+        <div class="proposal-meta">
+          <span class="proposal-state is-accepted">accepted as-is</span>
+          <span>preserve</span>
+          <span>style_dna</span>
+        </div>
+        <p class="proposal-content">Organize each concept around a single physical transformation that can actually be shot.</p>
+
+        <p class="proposal-note">weak positive signal — accepted_as_is</p>
+      </article>
+
+      </div>
+
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C1 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;The condensation run is the whole idea -- one physical change I can…&rdquo;</p>
+
+      <article class="proposal-card" data-state="accepted-edited">
+        <div class="proposal-meta">
+          <span class="proposal-state is-accepted-edited">accepted · edited</span>
+          <span>preserve</span>
+          <span>style_dna</span>
+        </div>
+
+
+          <div class="proposal-diff">
+            <p class="proposal-diff-row"><span class="proposal-diff-key">model draft</span>
+              <span class="proposal-diff-old">End on a clean product shot.</span></p>
+            <p class="proposal-diff-row"><span class="proposal-diff-key">final wording</span>
+              <span class="proposal-diff-new">Keep the product legible in the final beat.</span></p>
+          </div>
+
+        <p class="proposal-note">strongest teaching signal — accepted_edited</p>
+      </article>
+
+      </div>
+
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C2 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;Too many tricks competing: rotating bars, a spinning wedge, a leaf…&rdquo;</p>
+
+      <article class="proposal-card" data-state="accepted">
+        <div class="proposal-meta">
+          <span class="proposal-state is-accepted">accepted as-is</span>
+          <span>avoid</span>
+          <span>avoid_element</span>
+        </div>
+        <p class="proposal-content">Do not stack competing visual tricks in one sixteen-second concept.</p>
+
+        <p class="proposal-note">weak positive signal — accepted_as_is</p>
+      </article>
+
+      </div>
+
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C2 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;Too many tricks competing: rotating bars, a spinning wedge, a leaf…&rdquo;</p>
+
+      <article class="proposal-card" data-state="rejected">
+        <div class="proposal-meta">
+          <span class="proposal-state is-rejected">rejected</span>
+          <span>avoid</span>
+          <span>avoid_element</span>
+        </div>
+        <p class="proposal-content">Avoid amber and green palettes.</p>
+
+        <p class="proposal-note">Too broad -- the palette was never the problem, the stacking was.</p>
+      </article>
+
+      </div>
+
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C3 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;The crawling sunlight is a real transformation and the creased line…&rdquo;</p>
+
+      <article class="proposal-card" data-state="accepted">
+        <div class="proposal-meta">
+          <span class="proposal-state is-accepted">accepted as-is</span>
+          <span>preserve</span>
+          <span>style_dna</span>
+        </div>
+        <p class="proposal-content">Lead with tactile material detail rather than general atmosphere.</p>
+
+        <p class="proposal-note">weak positive signal — accepted_as_is</p>
+      </article>
+
+      </div>
+
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C3 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;The crawling sunlight is a real transformation and the creased line…&rdquo;</p>
+
+      <article class="proposal-card" data-state="pending">
+        <div class="proposal-meta">
+          <span class="proposal-state is-pending">pending</span>
+          <span>preserve</span>
+          <span>style_dna</span>
+        </div>
+        <p class="proposal-content">Limit each concept to two on-screen props besides the product.</p>
+
+        <p class="proposal-note">lowest-confidence draft, left undecided on purpose</p>
+      </article>
+
+      </div>
+    </div>
+
+      </aside>
+
+        <a class="stage-next" href="#stage-regenerate">Next: Regenerate<span aria-hidden="true">&rarr;</span></a>
+      </section>
+
+
+      <section class="stage-panel" id="stage-regenerate" aria-label="Regenerate stage">
+
+      <aside class="recipe-rail" aria-label="Generation recipe">
+        <p class="recipe-rail-title">Generation recipe</p>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">target model</span>
+          <span class="recipe-row-value recipe-row-model">&#9656; generic</span>
+        </div>
+
+        <div class="recipe-field">
+          <span class="recipe-row-key">brief</span>
+          <p class="recipe-brief">Same launch film, now informed by the guidance accepted in round one.</p>
+        </div>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">reference image</span>
+          <span class="recipe-row-value is-empty">none</span>
+        </div>
+
+        <div class="recipe-controls">
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">batch size</span>
+            <span class="recipe-chip">3</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">mode</span>
+            <span class="recipe-chip">explore</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">diversity</span>
+            <span class="recipe-chip">balanced</span>
+          </div>
+        </div>
+
+        <div class="recipe-memory">
+          <div class="recipe-memory-head">
+            <span class="recipe-row-key">accepted memory</span>
+            <span class="recipe-memory-count">4 accepted</span>
+          </div>
+          <div class="recipe-memory-modes"><span class="recipe-memory-mode is-active">all</span><span class="recipe-memory-mode">selected</span><span class="recipe-memory-mode">ignore</span></div>
+          <p class="recipe-memory-note">the generator sees all 4 accepted memories</p>
+          <div class="recipe-memory-picker"><span class="recipe-memory-item"><span class="recipe-memory-check" aria-hidden="true">&#10003;</span>Organize each concept around a single physical transformation that can actually be shot.</span><span class="recipe-memory-item"><span class="recipe-memory-check" aria-hidden="true">&#10003;</span>Keep the product legible in the final beat.</span><span class="recipe-memory-item"><span class="recipe-memory-check" aria-hidden="true">&#10003;</span>Do not stack competing visual tricks in one sixteen-second concept.</span><span class="recipe-memory-item"><span class="recipe-memory-check" aria-hidden="true">&#10003;</span>Lead with tactile material detail rather than general atmosphere.</span></div>
+        </div>
+
+        <div class="recipe-row recipe-row-stack">
+          <span class="recipe-row-key">candidate template</span>
+          <span class="recipe-row-value">Default candidate prompt template</span>
+        </div>
+
+        <p class="recipe-memory-state mono">
+          memory fp <code>fp_demo0003</code> &middot; 4 items
+          &middot; all
+        </p>
+
+        <div class="recipe-rail-footer">
+          <span class="generate-key" role="img"
+                aria-label="Generate — new batch — accepted memory changed (recorded action)">
+            <span class="generate-key-label">Generate</span>
+            <span class="generate-key-subtitle">new batch — accepted memory changed</span>
+          </span>
+          <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
+        </div>
+      </aside>
+
+        <div class="canvas-col">
+      <section class="batch-group">
+
+      <header class="batch-slate">
+        <div class="batch-slate-line">
+          <span class="batch-slate-no">BATCH 02</span>
+          <span class="batch-slate-model">&#9656; generic</span>
+          <span class="batch-slate-brief">&ldquo;Same launch film, now informed by the guidance accepted in round one.&rdquo;</span>
+        </div>
+        <div class="batch-slate-line batch-slate-line-meta">
+          <span class="batch-slate-stamp">MEMORY 4 items &middot; all</span>
+          <span class="batch-slate-fp">fp fp_demo0003</span>
+          <span>explore/balanced</span>
+          <span>3 candidates</span>
+        </div>
+      </header>
+
+        <div class="what-changed">
+          <div class="what-changed-metric">
+            <strong>4</strong>
+            <span>accepted items used as context</span>
+          </div>
+          <div class="what-changed-groups"><div class="what-changed-group"><h4>Preserve</h4><ul><li>Organize each concept around a single physical transformation that can actually be shot.</li><li>Keep the product legible in the final beat.</li><li>Lead with tactile material detail rather than general atmosphere.</li></ul></div><div class="what-changed-group"><h4>Avoid</h4><ul><li>Do not stack competing visual tricks in one sixteen-second concept.</li></ul></div></div>
+        </div>
+        <p class="what-changed-link mono">
+          batch 01 fp fp_demo0001 &rarr; batch 02 fp fp_demo0003
+          &mdash; the memory fingerprint changed, so this is a new comparison set
+        </p>
+        <div class="sheet-grid">
+
+        <article class="candidate-card sheet-card" data-state="unjudged">
+          <span class="sheet-card-head">
+            <span class="sheet-card-id">C1</span>
+            <span class="sheet-card-state is-unjudged">unjudged</span>
+          </span>
+          <p class="sheet-card-prompt">One unbroken macro: a single bead of condensation swells on the shoulder of the bottle, releases, and tracks straight down through the label, leaving a clear stripe across frosted glass. The pull-back stops with the full bottle centred and the label sharp.</p>
+          <span class="sheet-card-foot" data-review-target="artifacts">
+            <span class="sheet-card-outputs is-empty">no outputs</span>
+            <span class="sheet-card-role">aligned</span>
+          </span>
+          <a class="sheet-card-open" href="#stage-trace">Open</a>
+        </article>
+
+        <article class="candidate-card sheet-card" data-state="unjudged">
+          <span class="sheet-card-head">
+            <span class="sheet-card-id">C2</span>
+            <span class="sheet-card-state is-unjudged">unjudged</span>
+          </span>
+          <p class="sheet-card-prompt">A thumb presses a strip of orange peel until the oil bursts and atomises through a hard side light. The mist settles across the cap and shoulders of the bottle standing beside it; the final beat holds on the bottle, dressed in a fine sheen.</p>
+          <span class="sheet-card-foot" data-review-target="artifacts">
+            <span class="sheet-card-outputs is-empty">no outputs</span>
+            <span class="sheet-card-role">exploratory</span>
+          </span>
+          <a class="sheet-card-open" href="#stage-trace">Open</a>
+        </article>
+
+        <article class="candidate-card sheet-card" data-state="unjudged">
+          <span class="sheet-card-head">
+            <span class="sheet-card-id">C3</span>
+            <span class="sheet-card-state is-unjudged">unjudged</span>
+          </span>
+          <p class="sheet-card-prompt">A drop of oil lands on still water and blooms into a slow citrus-coloured ring. The ripple reaches the base of the bottle standing in the tray, and the surface settles to a mirror with the bottle and its reflection held square in frame.</p>
+          <span class="sheet-card-foot" data-review-target="artifacts">
+            <span class="sheet-card-outputs is-empty">no outputs</span>
+            <span class="sheet-card-role">variation</span>
+          </span>
+          <a class="sheet-card-open" href="#stage-trace">Open</a>
+        </article>
+
+        </div>
+      </section>
+    </div>
+
+      <aside class="pending-rail" aria-label="Pending memory" data-review-target="memory-proposals">
+        <div class="pending-rail-head">
+          <p class="eyebrow">Pending memory</p>
+          <span class="pending-rail-count">1</span>
+        </div>
+        <div class="pending-rail-list">
+      <div class="pending-rail-entry">
+        <p class="pending-rail-source mono">C3 judgment · batch 01</p>
+        <p class="pending-rail-quote">&ldquo;The crawling sunlight is a real transformation and the creased line…&rdquo;</p>
+
+      <article class="proposal-card" data-state="pending">
+        <div class="proposal-meta">
+          <span class="proposal-state is-pending">pending</span>
+          <span>preserve</span>
+          <span>style_dna</span>
+        </div>
+        <p class="proposal-content">Limit each concept to two on-screen props besides the product.</p>
+
+
+      </article>
+
+      </div>
+    </div>
+        <p class="pending-rail-note">Still undecided, and therefore still absent from the context above.</p>
+      </aside>
+
+        <a class="stage-next" href="#stage-trace">Next: Trace<span aria-hidden="true">&rarr;</span></a>
+      </section>
+
+
+      <section class="stage-panel" id="stage-trace" aria-label="Trace stage">
+
+      <aside class="recipe-rail" aria-label="Generation recipe">
+        <p class="recipe-rail-title">Generation recipe</p>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">target model</span>
+          <span class="recipe-row-value recipe-row-model">&#9656; generic</span>
+        </div>
+
+        <div class="recipe-field">
+          <span class="recipe-row-key">brief</span>
+          <p class="recipe-brief">Same launch film, now informed by the guidance accepted in round one.</p>
+        </div>
+
+        <div class="recipe-row">
+          <span class="recipe-row-key">reference image</span>
+          <span class="recipe-row-value is-empty">none</span>
+        </div>
+
+        <div class="recipe-controls">
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">batch size</span>
+            <span class="recipe-chip">3</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">mode</span>
+            <span class="recipe-chip">explore</span>
+          </div>
+          <div class="recipe-field-small">
+            <span class="recipe-row-key">diversity</span>
+            <span class="recipe-chip">balanced</span>
+          </div>
+        </div>
+
+        <div class="recipe-memory">
+          <div class="recipe-memory-head">
+            <span class="recipe-row-key">accepted memory</span>
+            <span class="recipe-memory-count">4 accepted</span>
+          </div>
+          <div class="recipe-memory-modes"><span class="recipe-memory-mode is-active">all</span><span class="recipe-memory-mode">selected</span><span class="recipe-memory-mode">ignore</span></div>
+          <p class="recipe-memory-note">the generator sees all 4 accepted memories</p>
+          <div class="recipe-memory-picker"><span class="recipe-memory-item"><span class="recipe-memory-check" aria-hidden="true">&#10003;</span>Organize each concept around a single physical transformation that can actually be shot.</span><span class="recipe-memory-item"><span class="recipe-memory-check" aria-hidden="true">&#10003;</span>Keep the product legible in the final beat.</span><span class="recipe-memory-item"><span class="recipe-memory-check" aria-hidden="true">&#10003;</span>Do not stack competing visual tricks in one sixteen-second concept.</span><span class="recipe-memory-item"><span class="recipe-memory-check" aria-hidden="true">&#10003;</span>Lead with tactile material detail rather than general atmosphere.</span></div>
+        </div>
+
+        <div class="recipe-row recipe-row-stack">
+          <span class="recipe-row-key">candidate template</span>
+          <span class="recipe-row-value">Default candidate prompt template</span>
+        </div>
+
+        <p class="recipe-memory-state mono">
+          memory fp <code>fp_demo0003</code> &middot; 4 items
+          &middot; all
+        </p>
+
+        <div class="recipe-rail-footer">
+          <span class="generate-key" role="img"
+                aria-label="Generate — new batch — accepted memory changed (recorded action)">
+            <span class="generate-key-label">Generate</span>
+            <span class="generate-key-subtitle">new batch — accepted memory changed</span>
+          </span>
+          <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
+        </div>
+      </aside>
+
+        <div class="canvas-col">
+      <section class="trace-panel">
+        <header class="canvas-head mono">
+          <span class="canvas-head-no">PROVENANCE</span>
+          <span>edited-then-accepted item</span>
+          <span class="canvas-head-brief">judgment &rarr; proposal &rarr; decision &rarr; accepted memory &rarr; later batch</span>
+        </header>
+        <ol class="chain">
+      <li class="chain-node">
+        <span class="chain-index">1</span>
+        <div class="chain-body">
+          <span class="chain-label">judgment</span>
+          <strong class="mono">fb_demo0001</strong>
+          <span class="chain-detail">The condensation run is the whole idea -- one physical change I can actuall…</span>
+        </div>
+      </li>
+
+      <li class="chain-node">
+        <span class="chain-index">2</span>
+        <div class="chain-body">
+          <span class="chain-label">candidate</span>
+          <strong class="mono">cand_demo0001</strong>
+          <span class="chain-detail">C1 · aligned</span>
+        </div>
+      </li>
+
+      <li class="chain-node">
+        <span class="chain-index">3</span>
+        <div class="chain-body">
+          <span class="chain-label">model draft</span>
+          <strong class="mono">memprop_demo0002</strong>
+          <span class="chain-detail">End on a clean product shot.</span>
+        </div>
+      </li>
+
+      <li class="chain-node">
+        <span class="chain-index">4</span>
+        <div class="chain-body">
+          <span class="chain-label">human decision</span>
+          <strong class="mono">accepted · edited</strong>
+          <span class="chain-detail">Keep the product legible in the final beat.</span>
+        </div>
+      </li>
+
+      <li class="chain-node">
+        <span class="chain-index">5</span>
+        <div class="chain-body">
+          <span class="chain-label">accepted memory</span>
+          <strong class="mono">mem_demo0002</strong>
+          <span class="chain-detail">Keep the product legible in the final beat.</span>
+        </div>
+      </li>
+
+      <li class="chain-node">
+        <span class="chain-index">6</span>
+        <div class="chain-body">
+          <span class="chain-label">later batch</span>
+          <strong class="mono">batch_demo0002</strong>
+          <span class="chain-detail">fp fp_demo0003 · 4 items in context</span>
+        </div>
+      </li>
+    </ol>
+      </section>
+    </div>
+
+      <aside class="pending-rail" aria-label="Receipts">
+        <div class="pending-rail-head">
+          <p class="eyebrow">Receipts</p>
+        </div>
+        <p class="pending-rail-note">
+          Every node above resolves to a stored row. These receipts are generated
+          by the backend, not written for this page.
+        </p>
+        <div class="receipt-links">
+          <a class="receipt-link mono" href="evidence/fixture/receipts/session_receipt.md">session receipt (.md)</a>
+          <a class="receipt-link mono" href="evidence/fixture/receipts/memory_receipt_1.md">memory receipt 1 (.md)</a>
+          <a class="receipt-link mono" href="evidence/fixture/receipts/memory_receipt_2.md">memory receipt 2 (.md)</a>
+          <a class="receipt-link mono" href="evidence/fixture/loop.json">full loop trace (.json)</a>
+        </div>
+      </aside>
+
+        <a class="stage-next" href="#stage-compare">Return to Compare<span aria-hidden="true">&#8634;</span></a>
+      </section>
+
+      </div>
+    </section>
+
+
+      <section class="region" id="memory">
+        <div class="region-head">
+          <h2>Memory</h2>
+          <p class="region-note">Durable skill memory: what was accepted, what taught the proposer, and when it changed.</p>
+        </div>
+        <div class="memory-grid">
+          <section class="panel" data-review-target="memory-proposals">
+            <div class="panel-head"><p class="eyebrow">Accepted memory corpus</p>
+              <span class="panel-count">4</span></div>
+            <div class="ledger-list">
+
+      <article class="ledger-card">
+        <div class="ledger-card-topline">
+          <span>style_dna &middot; preserve</span>
+          <em class="mono">mem_demo0004</em>
+        </div>
+        <p class="ledger-card-content">Lead with tactile material detail rather than general atmosphere.</p>
+        <div class="ledger-lifecycle">
+          <span class="lifecycle-badge is-active">active</span>
+          <span class="lifecycle-chip">soft_preference</span>
+          <span class="lifecycle-chip">reference_only</span>
+          <span class="lifecycle-chip">scope skill</span>
+        </div>
+        <div class="ledger-evidence-row">
+          <strong>from judgment</strong>
+          <span>&ldquo;The crawling sunlight is a real transformation and the creased linen is the kind of material detail I want. The problem is the bottle is just one more prop on a busy table -- by the last beat I still cannot see the product.&rdquo;</span>
+        </div>
+      </article>
+
+      <article class="ledger-card">
+        <div class="ledger-card-topline">
+          <span>avoid_element &middot; avoid</span>
+          <em class="mono">mem_demo0003</em>
+        </div>
+        <p class="ledger-card-content">Do not stack competing visual tricks in one sixteen-second concept.</p>
+        <div class="ledger-lifecycle">
+          <span class="lifecycle-badge is-active">active</span>
+          <span class="lifecycle-chip">soft_preference</span>
+          <span class="lifecycle-chip">reference_only</span>
+          <span class="lifecycle-chip">scope skill</span>
+        </div>
+        <div class="ledger-evidence-row">
+          <strong>from judgment</strong>
+          <span>&ldquo;Too many tricks competing: rotating bars, a spinning wedge, a leaf shadow, and a negative flip in sixteen seconds. Pick one. The amber and green is also generic set dressing rather than anything you can feel.&rdquo;</span>
+        </div>
+      </article>
+
+      <article class="ledger-card">
+        <div class="ledger-card-topline">
+          <span>style_dna &middot; preserve</span>
+          <em class="mono">mem_demo0002</em>
+        </div>
+        <p class="ledger-card-content">Keep the product legible in the final beat.</p>
+        <div class="ledger-lifecycle">
+          <span class="lifecycle-badge is-active">active</span>
+          <span class="lifecycle-chip">soft_preference</span>
+          <span class="lifecycle-chip">reference_only</span>
+          <span class="lifecycle-chip">scope skill</span>
+        </div>
+        <div class="ledger-evidence-row">
+          <strong>from judgment</strong>
+          <span>&ldquo;The condensation run is the whole idea -- one physical change I can actually shoot, and the beading reads expensive. But the bottle is never legible; I get texture and no product. Keep the transformation, end on the bottle.&rdquo;</span>
+        </div>
+      </article>
+
+      <article class="ledger-card">
+        <div class="ledger-card-topline">
+          <span>style_dna &middot; preserve</span>
+          <em class="mono">mem_demo0001</em>
+        </div>
+        <p class="ledger-card-content">Organize each concept around a single physical transformation that can actually be shot.</p>
+        <div class="ledger-lifecycle">
+          <span class="lifecycle-badge is-active">active</span>
+          <span class="lifecycle-chip">soft_preference</span>
+          <span class="lifecycle-chip">reference_only</span>
+          <span class="lifecycle-chip">scope skill</span>
+        </div>
+        <div class="ledger-evidence-row">
+          <strong>from judgment</strong>
+          <span>&ldquo;The condensation run is the whole idea -- one physical change I can actually shoot, and the beading reads expensive. But the bottle is never legible; I get texture and no product. Keep the transformation, end on the bottle.&rdquo;</span>
+        </div>
+      </article>
+
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><p class="eyebrow">Proposer teaching set</p>
+              <span class="panel-count">5</span></div>
+            <p class="panel-note">
+              Decided proposals only &mdash; pending items teach nothing. An edited-then-accepted
+              proposal is the strongest signal, because it carries both the model&rsquo;s draft
+              and the human&rsquo;s correction.
+            </p>
+            <div class="teaching-list"><div class="teaching-row">
+                  <span class="teaching-state is-accepted">accepted_as_is</span>
+                  <p>Organize each concept around a single physical transformation that can actually be shot.</p>
+                  <span class="teaching-weight">weak positive</span>
+                </div><div class="teaching-row">
+                  <span class="teaching-state is-rejected">rejected</span>
+                  <p>Avoid amber and green palettes.</p>
+                  <span class="teaching-weight">strong negative</span>
+                </div><div class="teaching-row">
+                  <span class="teaching-state is-accepted-edited">accepted_edited</span>
+                  <p><span class="teaching-old">End on a clean product shot.</span>
+                     <span class="teaching-arrow" aria-hidden="true">&rarr;</span>
+                     <span class="teaching-new">Keep the product legible in the final beat.</span></p>
+                  <span class="teaching-weight">strongest</span>
+                </div></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><p class="eyebrow">Memory change timeline</p>
+              <span class="panel-count">22</span></div>
+            <p class="panel-note mono">
+              3 feedback &middot;
+              11 proposal &middot;
+              4 memory &middot;
+              4 receipt
+            </p>
+            <ol class="timeline-list"><li class="timeline-event" data-kind="feedback_added">
+              <span class="timeline-marker" aria-hidden="true"></span>
+              <div class="timeline-card">
+                <div class="timeline-card-head">
+                  <h4>Feedback added</h4>
+                  <span class="mono">fb_demo0001</span>
+                </div>
+                <p>The condensation run is the whole idea -- one physical change I can actually shoot, and the bea…</p>
+              </div>
+            </li><li class="timeline-event" data-kind="proposal_created">
+              <span class="timeline-marker" aria-hidden="true"></span>
+              <div class="timeline-card">
+                <div class="timeline-card-head">
+                  <h4>Memory proposal created</h4>
+                  <span class="mono">memprop_demo0001</span>
+                </div>
+                <p>Organize each concept around a single physical transformation that can actually be shot.</p>
+              </div>
+            </li><li class="timeline-event" data-kind="proposal_created">
+              <span class="timeline-marker" aria-hidden="true"></span>
+              <div class="timeline-card">
+                <div class="timeline-card-head">
+                  <h4>Memory proposal created</h4>
+                  <span class="mono">memprop_demo0002</span>
+                </div>
+                <p>Keep the product legible in the final beat.</p>
+              </div>
+            </li><li class="timeline-event" data-kind="proposal_accepted">
+              <span class="timeline-marker" aria-hidden="true"></span>
+              <div class="timeline-card">
+                <div class="timeline-card-head">
+                  <h4>Proposal accepted</h4>
+                  <span class="mono">memprop_demo0001</span>
+                </div>
+                <p>Organize each concept around a single physical transformation that can actually be shot.</p>
+              </div>
+            </li><li class="timeline-event" data-kind="memory_activated">
+              <span class="timeline-marker" aria-hidden="true"></span>
+              <div class="timeline-card">
+                <div class="timeline-card-head">
+                  <h4>Memory activated</h4>
+                  <span class="mono">mem_demo0001</span>
+                </div>
+                <p>Organize each concept around a single physical transformation that can actually be shot.</p>
+              </div>
+            </li><li class="timeline-event" data-kind="receipt_available">
+              <span class="timeline-marker" aria-hidden="true"></span>
+              <div class="timeline-card">
+                <div class="timeline-card-head">
+                  <h4>Receipt available</h4>
+                  <span class="mono">mem_demo0001</span>
+                </div>
+                <p>A canonical Markdown receipt is available for this accepted memory.</p>
+              </div>
+            </li></ol>
+            <div class="receipt-links">
+              <a class="receipt-link mono" href="evidence/fixture/receipts/memory_receipt_1.md">memory receipt 1 (.md)</a>
+              <a class="receipt-link mono" href="evidence/fixture/receipts/memory_receipt_2.md">memory receipt 2 (.md)</a>
+            </div>
+          </section>
+        </div>
+      </section>
+
+
+      <section class="region" id="history">
+        <div class="region-head">
+          <h2>History</h2>
+          <p class="region-note">The recorded session: both comparison sets, their fingerprints, and the exports.</p>
+        </div>
+        <div class="history-grid">
+          <section class="panel">
+            <div class="panel-head"><p class="eyebrow">Session recap</p></div>
+            <table class="recap-table">
+              <thead><tr><th>batch</th><th>candidates</th><th>memory</th><th>memory fp</th><th>recipe fp</th></tr></thead>
+              <tbody>
+                <tr><td>01</td><td>3</td>
+                    <td>0 items</td>
+                    <td class="mono">fp_demo0001</td>
+                    <td class="mono">fp_demo0002</td></tr>
+                <tr><td>02</td><td>3</td>
+                    <td>4 items</td>
+                    <td class="mono">fp_demo0003</td>
+                    <td class="mono">fp_demo0004</td></tr>
+              </tbody>
+            </table>
+            <p class="panel-note">Generated next batch from accepted memory.</p>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><p class="eyebrow">Exports</p></div>
+            <div class="receipt-links">
+              <a class="receipt-link mono" href="evidence/fixture/receipts/session_receipt.md">session receipt (.md)</a>
+              <a class="receipt-link mono" href="evidence/fixture/loop.json">full loop trace (.json)</a>
+              <a class="receipt-link mono" href="evidence/manifest.json">evidence manifest (.json)</a>
+            </div>
+          </section>
+        </div>
+      </section>
+
+
+      <section class="region" id="method">
+        <div class="region-head">
+          <h2>Method</h2>
+          <p class="region-note">What this page is, what the evidence proves, and what it does not.</p>
+        </div>
+
+        <div class="method-grid">
+          <section class="panel">
+            <h3>What this page is</h3>
+            <p class="disclosure">
+              A static projection of one recorded session, laid out in the product&rsquo;s own
+              cockpit geometry. It is <strong>not</strong> the running React application:
+              the recipe controls, Generate key, and decision buttons show recorded values
+              and do nothing.
+            </p>
+            <p class="disclosure">The model drafts prompts. You decide what carries forward.</p>
+            <p class="disclosure">Idea Search is the Manifold Studio presentation of the system originally developed as Subjective Skill Studio.</p>
+            <p class="disclosure">This showcase presents the pre-participation Subjective Skill Studio system within the Manifold product family. Its deterministic evidence remains tied to the audited source snapshot; later Manifold participation features are not represented here.</p>
+          </section>
+
+          <section class="panel">
+            <h3>Architecture</h3>
+            <p>
+              FastAPI + SQLite backend (async), React + Vite + TypeScript frontend, no
+              component framework. A two-layer prompt assembly (meta-prompt &rarr; candidate
+              template) feeds both the recipe preview and generation, with fingerprints over
+              the accepted-memory corpus and the generation recipe deciding whether a new
+              candidate appends to the current batch or starts a new one. This showcase drives
+              the same FastAPI app in-process through <span class="mono">TestClient</span>
+              using the project&rsquo;s built-in mock provider &mdash; the identical code path a
+              hosted LLM provider would run, with deterministic, non-networked output.
+            </p>
+          </section>
+
+          <section class="panel">
+            <h3>The creator problem</h3>
+            <p>
+              Creative feedback usually disappears between rounds: it stays in the
+              creator&rsquo;s head, a chat transcript, or an isolated note. This studio attaches
+              that reasoning to the exact candidate being judged, and makes only explicitly
+              approved guidance available to later generation.
+            </p>
+          </section>
+
+          <section class="panel">
+            <h3>What Eduardo built</h3>
+            <p>
+              The complete local application: batch and candidate versioning, recipe and
+              meta-prompt assembly, natural-language feedback, proposal decisions,
+              accepted-memory injection, optional artifact and rendering workflows, and the
+              ledger, timeline, fingerprints, backlinks, and receipts that make the loop
+              auditable.
+            </p>
+          </section>
+
+          <section class="panel panel-wide">
+            <h3>Fixture scope &amp; evidence</h3>
+            <p class="disclosure">
+              This deterministic walkthrough proves the application&rsquo;s persistence,
+              approval, scoping, and provenance mechanics. Its candidate prompts and
+              memory proposals are a curated script returned by the built-in mock
+              provider, not output from a hosted model, so nothing here demonstrates
+              content-sensitive proposal quality or improved creative outputs.
+            </p>
+            <p>
+              Every card, quote, and stamp above is read directly from
+              <span class="mono">evidence/fixture/loop.json</span>, generated by
+              <span class="mono">evidence/generate_fixture.py</span> against source snapshot
+              commit <span class="mono">82ed65dc01c2</span>
+              (extraction root <span class="mono">04906b0</span>,
+              backend schema v4). Raw database ids and
+              timestamps are non-deterministic by construction (uuid4, wall-clock); the
+              generator canonicalizes them into stable tokens before writing evidence, so
+              re-running it against the same snapshot reproduces byte-identical files.
+            </p>
+            <div class="method-tables">
+              <table class="evidence-table">
+                <caption>Output files and hashes</caption>
+                <thead><tr><th>path</th><th>sha256 (truncated)</th></tr></thead>
+                <tbody><tr><td class="mono">evidence/fixture/loop.json</td>
+                <td class="mono">cd79853f5e262f9c&hellip;</td></tr><tr><td class="mono">evidence/fixture/receipts/memory_receipt_1.md</td>
+                <td class="mono">7e535b3cd9d05664&hellip;</td></tr><tr><td class="mono">evidence/fixture/receipts/memory_receipt_2.md</td>
+                <td class="mono">918419fbedfaa28e&hellip;</td></tr><tr><td class="mono">evidence/fixture/receipts/session_receipt.md</td>
+                <td class="mono">7fca7c9d5f12b970&hellip;</td></tr></tbody>
+              </table>
+              <table class="evidence-table">
+                <caption>Which claim each fixture step supports</caption>
+                <thead><tr><th>claim</th><th>fixture step(s)</th></tr></thead>
+                <tbody><tr><td>workspace/project/skill creation</td><td class="mono">create_workspace, create_project, create_skill</td></tr><tr><td>initial candidate batch (comparison set)</td><td class="mono">generate_first_batch</td></tr><tr><td>one clear natural-language judgment</td><td class="mono">judge_candidate_1, judge_candidate_2, judge_candidate_3</td></tr><tr><td>feedback analysis into pending proposals</td><td class="mono">analyze_judgment_1, analyze_judgment_2, analyze_judgment_3</td></tr><tr><td>accept decision</td><td class="mono">accept_proposal_one_transformation, accept_proposal_no_stacking, accept_proposal_tactile_detail</td></tr><tr><td>edit decision</td><td class="mono">edit_proposal_product_legible, accept_edited_proposal_product_legible</td></tr><tr><td>reject decision</td><td class="mono">reject_proposal_no_amber_green</td></tr><tr><td>pending proposals rail before a human decision</td><td class="mono">pending_proposal_prop_limit</td></tr><tr><td>a subsequent batch conditioned on accepted memory</td><td class="mono">generate_next_batch</td></tr><tr><td>provenance receipt</td><td class="mono">memory_ledger, memory_timeline, memory_receipt_1, memory_receipt_2</td></tr><tr><td>a provenance or session receipt</td><td class="mono">session_receipt</td></tr></tbody>
+              </table>
+            </div>
+            <p class="regen-command mono">uv run --project backend python evidence/generate_fixture.py &amp;&amp; python3 site/build_site.py</p>
+          </section>
+
+          <section class="panel panel-wide">
+            <h3>Limitations</h3>
+            <ul class="limitations-list">
+              <li>The candidate text and the drafted proposals are a curated, deterministic
+                script returned by the built-in mock provider, not output from a hosted
+                LLM &mdash; the walkthrough demonstrates control flow and the data model,
+                not generation quality.</li>
+              <li>A product demonstration on synthetic data: not a benchmark, not evidence of
+                production usage.</li>
+              <li>The interactive React/Vite frontend is not deployed here. This page reads the
+                same backend output the UI would render and lays it out in the same cockpit
+                geometry, but nothing on it is live.</li>
+              <li>This repository and the application it showcases are closed source &mdash;
+                &copy; 2026 Eduardo Cortes. All rights reserved. Public availability does not
+                grant a license to copy, modify, redistribute, or reuse the application, this
+                site, or its evidence.</li>
+            </ul>
+          </section>
+        </div>
+      </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      Manifold Studio &middot; Idea Search. Generated
+      deterministically from source snapshot commit
+      <span class="mono">82ed65dc01c2</span>.
+      &copy; 2026 Eduardo Cortes. All rights reserved.
+    </p>
+  </footer>
+</div>
+
+</body>
+</html>

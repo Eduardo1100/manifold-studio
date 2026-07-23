@@ -1,0 +1,84 @@
+name: Deploy Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify SHA256SUMS
+        run: |
+          set -euo pipefail
+          if [ ! -f SHA256SUMS ]; then
+            echo "SHA256SUMS is missing from the repository root." >&2
+            exit 1
+          fi
+          sha256sum -c SHA256SUMS
+
+      - name: Public-boundary check
+        run: |
+          set -euo pipefail
+          # This bundle must never contain application source, build
+          # tooling, or private project material -- only the static
+          # showcase, its evidence, and publication metadata.
+          fail=0
+          for d in backend frontend scripts data docs .claude; do
+            if [ -e "$d" ]; then
+              echo "Forbidden private directory present: $d" >&2
+              fail=1
+            fi
+          done
+          if find . -type f \( \
+              -name '*.py' -o -name '*.ts' -o -name '*.tsx' -o -name '*.js' \
+              -o -name '*.jsx' -o -name 'package-lock.json' -o -name 'uv.lock' \
+              -o -name 'poetry.lock' -o -name '*.env' -o -name '.env*' \
+            \) -not -path './.git/*' | grep -q .; then
+            echo "Forbidden source/lockfile/env file present in the bundle:" >&2
+            find . -type f \( \
+              -name '*.py' -o -name '*.ts' -o -name '*.tsx' -o -name '*.js' \
+              -o -name '*.jsx' -o -name 'package-lock.json' -o -name 'uv.lock' \
+              -o -name 'poetry.lock' -o -name '*.env' -o -name '.env*' \
+            \) -not -path './.git/*' >&2
+            fail=1
+          fi
+          # No terminology grep here, on purpose. A public workflow that
+          # greps for confidential names has to spell them out -- which
+          # publishes the very words it is guarding, and makes the step
+          # match its own source on every run. Sensitive-name scanning is
+          # the job of the private publication tooling, which runs before
+          # this bundle is produced.
+          exit "$fail"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
