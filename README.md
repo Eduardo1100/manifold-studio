@@ -1,11 +1,11 @@
-# Manifold Studio — Idea Search
+# Manifold Studio — Idea Search Engine
 
-**Idea Search** is the Manifold Studio feature for choosing creative direction
+**Idea Search Engine** is the Manifold Studio feature for choosing creative direction
 with a person in the loop:
 
     Manifold
       Manifold Studio
-        Idea Search
+        Idea Search Engine
 
 Compare prompt candidates, explain what works, and decide what carries into the
 next round. The model drafts prompts. You decide what carries forward: only
@@ -14,7 +14,7 @@ from judgment to accepted item is preserved.
 
 This repository contains the static, evidence-backed showcase for that feature.
 
-Idea Search is the Manifold Studio presentation of the system originally
+Idea Search Engine is the Manifold Studio presentation of the system originally
 developed as Subjective Skill Studio. The evidence in this bundle was generated
 from that system's source snapshot, which predates the Manifold branding.
 
