@@ -16,7 +16,10 @@ demonstrate.
 
 "Manifold", "Manifold Studio", the Manifold mark, and "Subjective Skill
 Studio" are product and brand identifiers of the copyright holder. Nothing
-here grants permission to use them.
+here grants permission to use them. The official Manifold brand source is
+[https://manifold-official.eduardo11.chatgpt.site](https://manifold-official.eduardo11.chatgpt.site);
+the brand provenance record in this repository documents exact asset
+synchronization and does not grant a license.
 
 Other third-party names, product names, and trademarks referenced on this
 site belong to their respective owners and are used only for identification.

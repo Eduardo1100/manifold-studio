@@ -20,6 +20,8 @@ from that system's source snapshot, which predates the Manifold branding.
 
 **Live site:** [https://eduardo1100.github.io/manifold-studio/](https://eduardo1100.github.io/manifold-studio/)
 
+**Manifold:** [https://manifold-official.eduardo11.chatgpt.site](https://manifold-official.eduardo11.chatgpt.site)
+
 ## What this is
 
 The application source (FastAPI + SQLite backend, React + Vite + TypeScript
@@ -56,6 +58,14 @@ This showcase presents the pre-participation Subjective Skill Studio system
 within the Manifold product family. Its deterministic evidence remains tied to
 the audited source snapshot; later Manifold participation features are not
 represented here.
+
+## Brand provenance
+
+This surface is synchronized to `manifold-brand@1.0.0`. The local mark and
+favicon are exact byte copies of the canonical raster assets; their source
+paths, dimensions, and SHA-256 hashes are recorded in
+[`brand-provenance.json`](brand-provenance.json). See [BRAND.md](BRAND.md) for
+the downstream usage contract and surface-specific profile.
 
 ## Licensing
 
