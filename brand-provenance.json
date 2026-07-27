@@ -1,0 +1,27 @@
+{
+  "brand_version": "manifold-brand@1.0.0",
+  "canonical_source": "https://manifold-official.eduardo11.chatgpt.site",
+  "canonical_manifest": "https://manifold-official.eduardo11.chatgpt.site/brand/manifest.json",
+  "synchronized_at": "2026-07-27",
+  "surface": "Manifold Studio · Idea Search",
+  "assets": [
+    {
+      "source_asset_path": "/brand/manifold-mark.png",
+      "local_asset_path": "manifold-mark.png",
+      "sha256": "29253c4af687e367234e03dd005b77285381589ed459a9c0e24ca21c9ff62cc4",
+      "width": 234,
+      "height": 181,
+      "format": "PNG (RGBA)",
+      "notes": "Exact byte copy. Never trace, redraw, recolor, stretch, rotate, or approximate."
+    },
+    {
+      "source_asset_path": "/brand/manifold-favicon.png",
+      "local_asset_path": "favicon.png",
+      "sha256": "6b3d4998cc2083d22665aa36ab2042331ade3ae8032d002f8b23135d733a3261",
+      "width": 64,
+      "height": 64,
+      "format": "PNG (RGBA)",
+      "notes": "Exact byte copy of the canonical favicon."
+    }
+  ]
+}

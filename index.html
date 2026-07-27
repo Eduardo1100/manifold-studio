@@ -5,32 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Manifold Studio · Idea Search</title>
 <meta name="description" content="Compare prompt candidates, explain what works, and decide what carries into the next round." />
+<meta name="theme-color" content="#04060f" />
+<meta name="manifold:brand-version" content="manifold-brand@1.0.0" />
+<meta name="manifold:brand-source" content="https://manifold-official.eduardo11.chatgpt.site" />
 <link rel="canonical" href="https://eduardo1100.github.io/manifold-studio/" />
-<link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=c9572b6fbd06" />
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=6b3d4998cc20" />
 
 <meta property="og:type" content="website" />
+<meta property="og:site_name" content="Manifold Studio" />
 <meta property="og:title" content="Manifold Studio · Idea Search" />
 <meta property="og:description" content="Compare prompt candidates, explain what works, and decide what carries into the next round." />
 <meta property="og:url" content="https://eduardo1100.github.io/manifold-studio/" />
-<meta property="og:image" content="https://eduardo1100.github.io/manifold-studio/social-preview.png" />
+<meta property="og:image" content="https://eduardo1100.github.io/manifold-studio/social-preview-brand-v1.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="Manifold Studio Idea Search — Compare prompt candidates, explain what works, and decide what carries into the next round." />
+<meta property="og:image:alt" content="Manifold Studio Idea Search — Compare, judge, propose, decide, regenerate, and trace." />
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Manifold Studio · Idea Search" />
 <meta name="twitter:description" content="Compare prompt candidates, explain what works, and decide what carries into the next round." />
-<meta name="twitter:image" content="https://eduardo1100.github.io/manifold-studio/social-preview.png" />
-<meta name="twitter:image:alt" content="Manifold Studio Idea Search — Compare prompt candidates, explain what works, and decide what carries into the next round." />
+<meta name="twitter:image" content="https://eduardo1100.github.io/manifold-studio/social-preview-brand-v1.png" />
+<meta name="twitter:image:alt" content="Manifold Studio Idea Search — Compare, judge, propose, decide, regenerate, and trace." />
 <style>
 
 /* ===========================================================================
    Manifold Studio -- Idea Search showcase stylesheet.
 
-   Visual tokens below (palette, gradients, glow, typography, borders, button
-   treatment, card surfaces) are the approved Manifold baseline, carried over
-   unchanged. This pass changed POSITIONING only: the page is now a
-   projection of the real product's cockpit rather than a landing page.
+   Shared identity follows manifold-brand@1.0.0. The exact raster assets and
+   synchronization record live beside this page in brand-provenance.json.
+   The layout remains a projection of the real product's cockpit rather than a
+   landing page.
 
    Layout transplanted from frontend/src/App.css and its components:
 
@@ -84,14 +88,19 @@
 
   --cyan: #22d3ee;
   --blue: #3b82f6;
-  --violet: #8b5cf6;
+  --ember: #fc4c0d;
   --accent: var(--cyan);
   --accent-soft: rgba(34, 211, 238, 0.1);
-  --accent-line: rgba(59, 130, 246, 0.34);
-
-  /* Action gradient: darker than the mark gradient so white text clears
-     4.5:1 at both ends. */
-  --grad-action: linear-gradient(135deg, #2563eb 0%, #6d3ff0 55%, #7c3aed 100%);
+  --accent-line: rgba(34, 211, 238, 0.34);
+  --action-surface: #0e1a34;
+  --action-surface-hover: #14223f;
+  --action-surface-active: #0a1428;
+  --action-keyline: rgba(34, 211, 238, 0.55);
+  --action-keyline-strong: rgba(34, 211, 238, 0.9);
+  --action-underglow:
+    0 0 0 1px rgba(34, 211, 238, 0.45),
+    0 8px 26px -12px rgba(34, 211, 238, 0.5),
+    0 12px 34px -20px rgba(252, 76, 13, 0.45);
 
   --positive: #34d399;
   --negative: #fb7185;
@@ -143,6 +152,22 @@ a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-ra
 
 h1, h2, h3, h4 { letter-spacing: -0.024em; }
 
+.skip-link {
+  position: fixed;
+  top: 0.65rem;
+  left: 0.65rem;
+  z-index: 100;
+  transform: translateY(calc(-100% - 1rem));
+  padding: 0.65rem 0.85rem;
+  border: 2px solid var(--action-keyline-strong);
+  border-radius: var(--r-sm);
+  background: var(--action-surface);
+  color: var(--text);
+  font-weight: 700;
+  transition: transform 140ms ease;
+}
+.skip-link:focus { transform: translateY(0); }
+
 .mono { font-family: var(--font-mono); letter-spacing: 0.01em; }
 .muted-copy { color: var(--text-dim); }
 
@@ -185,7 +210,7 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
   pointer-events: none;
   background:
     radial-gradient(58rem 30rem at 8% -10%, rgba(34, 211, 238, 0.1), transparent 62%),
-    radial-gradient(52rem 30rem at 78% -14%, rgba(124, 58, 237, 0.13), transparent 60%),
+    radial-gradient(52rem 30rem at 78% -14%, rgba(252, 76, 13, 0.13), transparent 60%),
     var(--ink-1000);
 }
 
@@ -348,6 +373,14 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
   background: rgba(125, 155, 220, 0.09);
 }
 .stage-tab:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.stage-tab[aria-current="step"] {
+  --tab-no: var(--cyan);
+  --tab-title: var(--text);
+  --tab-desc: var(--text-dim);
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.18);
+}
 
 /* Secondary continuation control at the foot of each stage. */
 .stage-next {
@@ -552,10 +585,11 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
   flex-direction: column;
   gap: 0.1rem;
   padding: 0.6rem 0.95rem;
+  border: 1px solid var(--action-keyline);
   border-radius: var(--r-sm);
-  background: var(--grad-action);
-  color: #fff;
-  box-shadow: 0 14px 30px -20px rgba(59, 130, 246, 0.95);
+  background: var(--action-surface);
+  color: var(--text);
+  box-shadow: var(--action-underglow);
 }
 .generate-key-label { font-size: 0.9rem; font-weight: 650; }
 .generate-key-subtitle { font-size: 0.7rem; opacity: 0.86; }
@@ -802,7 +836,7 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
 .what-changed-metric strong {
   font-size: 1.6rem;
   line-height: 1;
-  background: linear-gradient(140deg, var(--cyan), var(--violet));
+  background: linear-gradient(140deg, var(--cyan), var(--ember));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -956,7 +990,17 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
 .timeline-card-head span { color: var(--text-faint); font-size: 0.62rem; }
 .timeline-card p { margin: 0.15rem 0 0; color: var(--text-dim); font-size: 0.77rem !important; line-height: 1.45; }
 
-.recap-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: var(--r-sm);
+  scrollbar-color: var(--line-strong) var(--ink-900);
+}
+.table-scroll:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.recap-table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: 0.78rem; }
 .recap-table th, .recap-table td { text-align: left; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--line); }
 .recap-table th { color: var(--text-faint); font-weight: 500; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; }
 .recap-table td { color: var(--text-dim); }
@@ -991,6 +1035,11 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
   font-size: 0.79rem;
 }
 .site-footer p { margin: 0; }
+.site-footer a { text-decoration: underline; text-underline-offset: 3px; }
+
+@media (forced-colors: active), (prefers-contrast: more) {
+  .app-glow { display: none; }
+}
 
 /* ---- Responsive (mirrors App.css's loop breakpoints) ------------------- */
 @media (max-width: 1400px) {
@@ -1062,6 +1111,7 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
   }
   .stage-switcher::-webkit-scrollbar { display: none; }
   .stage-tab { flex: 0 0 11.5rem; }
+  .stage-panel { scroll-margin-top: calc(var(--topbar-h) + 11rem); }
   .workspace-note { margin-left: 0; }
 }
 
@@ -1069,13 +1119,15 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
 </head>
 <body>
 
+<a class="skip-link" href="#main-content">Skip to Idea Search content</a>
+
 <div class="app" id="top">
   <div class="app-glow" aria-hidden="true"></div>
 
   <header class="topbar">
     <div class="topbar-row">
       <a class="brand" href="#top" aria-label="Manifold Studio">
-        <img class="brand-mark" src="manifold-mark.png" alt="" width="32" height="26" decoding="async" />
+        <img class="brand-mark" src="manifold-mark.png" alt="" width="234" height="181" decoding="async" />
         <span class="brand-name">Manifold</span>
         <span class="brand-product">Studio</span>
       </a>
@@ -1089,7 +1141,7 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
     </div>
   </header>
 
-  <main class="app-main">
+  <main class="app-main" id="main-content" tabindex="-1">
 
     <section class="title-band">
       <p class="eyebrow">Manifold Studio</p>
@@ -1106,13 +1158,18 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
           <p class="workspace-note">Static projection of one recorded session &mdash; controls show recorded values.</p>
         </div>
         <nav class="stage-switcher" aria-label="Workflow stage">
-          <a class="stage-tab is-default-tab" href="#stage-compare"><span class="stage-tab-no">01</span><span class="stage-tab-title">Compare</span><span class="stage-tab-desc">Review the starting set</span></a><a class="stage-tab" href="#stage-judge"><span class="stage-tab-no">02</span><span class="stage-tab-title">Judge</span><span class="stage-tab-desc">Write grounded feedback</span></a><a class="stage-tab" href="#stage-propose"><span class="stage-tab-no">03</span><span class="stage-tab-title">Propose</span><span class="stage-tab-desc">Inspect drafted guidance</span></a><a class="stage-tab" href="#stage-decide"><span class="stage-tab-no">04</span><span class="stage-tab-title">Decide</span><span class="stage-tab-desc">Accept, edit, or reject</span></a><a class="stage-tab" href="#stage-regenerate"><span class="stage-tab-no">05</span><span class="stage-tab-title">Regenerate</span><span class="stage-tab-desc">Apply accepted memory</span></a><a class="stage-tab" href="#stage-trace"><span class="stage-tab-no">06</span><span class="stage-tab-title">Trace</span><span class="stage-tab-desc">Audit what carried forward</span></a>
+          <a class="stage-tab is-default-tab" id="stage-tab-compare" href="#stage-compare" aria-controls="stage-compare" aria-current="step"><span class="stage-tab-no">01</span><span class="stage-tab-title">Compare</span><span class="stage-tab-desc">Review the starting set</span></a>
+          <a class="stage-tab" id="stage-tab-judge" href="#stage-judge" aria-controls="stage-judge"><span class="stage-tab-no">02</span><span class="stage-tab-title">Judge</span><span class="stage-tab-desc">Write grounded feedback</span></a>
+          <a class="stage-tab" id="stage-tab-propose" href="#stage-propose" aria-controls="stage-propose"><span class="stage-tab-no">03</span><span class="stage-tab-title">Propose</span><span class="stage-tab-desc">Inspect drafted guidance</span></a>
+          <a class="stage-tab" id="stage-tab-decide" href="#stage-decide" aria-controls="stage-decide"><span class="stage-tab-no">04</span><span class="stage-tab-title">Decide</span><span class="stage-tab-desc">Accept, edit, or reject</span></a>
+          <a class="stage-tab" id="stage-tab-regenerate" href="#stage-regenerate" aria-controls="stage-regenerate"><span class="stage-tab-no">05</span><span class="stage-tab-title">Regenerate</span><span class="stage-tab-desc">Apply accepted memory</span></a>
+          <a class="stage-tab" id="stage-tab-trace" href="#stage-trace" aria-controls="stage-trace"><span class="stage-tab-no">06</span><span class="stage-tab-title">Trace</span><span class="stage-tab-desc">Audit what carried forward</span></a>
         </nav>
       </div>
 
       <div class="loop-workspace">
 
-      <section class="stage-panel is-default" id="stage-compare" aria-label="Compare stage">
+      <section class="stage-panel is-default" id="stage-compare" aria-labelledby="stage-tab-compare">
 
       <aside class="recipe-rail" aria-label="Generation recipe">
         <p class="recipe-rail-title">Generation recipe</p>
@@ -1168,11 +1225,10 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
         </p>
 
         <div class="recipe-rail-footer">
-          <span class="generate-key" role="img"
-                aria-label="Generate — starts a new batch (recorded action)">
+          <div class="generate-key">
             <span class="generate-key-label">Generate</span>
             <span class="generate-key-subtitle">starts a new batch</span>
-          </span>
+          </div>
           <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
         </div>
       </aside>
@@ -1255,7 +1311,7 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
       </section>
 
 
-      <section class="stage-panel" id="stage-judge" aria-label="Judge stage">
+      <section class="stage-panel" id="stage-judge" aria-labelledby="stage-tab-judge">
 
       <aside class="recipe-rail" aria-label="Generation recipe">
         <p class="recipe-rail-title">Generation recipe</p>
@@ -1311,11 +1367,10 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
         </p>
 
         <div class="recipe-rail-footer">
-          <span class="generate-key" role="img"
-                aria-label="Generate — starts a new batch (recorded action)">
+          <div class="generate-key">
             <span class="generate-key-label">Generate</span>
             <span class="generate-key-subtitle">starts a new batch</span>
-          </span>
+          </div>
           <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
         </div>
       </aside>
@@ -1374,7 +1429,7 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
       </section>
 
 
-      <section class="stage-panel" id="stage-propose" aria-label="Propose stage">
+      <section class="stage-panel" id="stage-propose" aria-labelledby="stage-tab-propose">
 
       <aside class="recipe-rail" aria-label="Generation recipe">
         <p class="recipe-rail-title">Generation recipe</p>
@@ -1430,11 +1485,10 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
         </p>
 
         <div class="recipe-rail-footer">
-          <span class="generate-key" role="img"
-                aria-label="Generate — starts a new batch (recorded action)">
+          <div class="generate-key">
             <span class="generate-key-label">Generate</span>
             <span class="generate-key-subtitle">starts a new batch</span>
-          </span>
+          </div>
           <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
         </div>
       </aside>
@@ -1595,7 +1649,7 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
       </section>
 
 
-      <section class="stage-panel" id="stage-decide" aria-label="Decide stage">
+      <section class="stage-panel" id="stage-decide" aria-labelledby="stage-tab-decide">
 
       <aside class="recipe-rail" aria-label="Generation recipe">
         <p class="recipe-rail-title">Generation recipe</p>
@@ -1651,11 +1705,10 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
         </p>
 
         <div class="recipe-rail-footer">
-          <span class="generate-key" role="img"
-                aria-label="Generate — starts a new batch (recorded action)">
+          <div class="generate-key">
             <span class="generate-key-label">Generate</span>
             <span class="generate-key-subtitle">starts a new batch</span>
-          </span>
+          </div>
           <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
         </div>
       </aside>
@@ -1823,7 +1876,7 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
       </section>
 
 
-      <section class="stage-panel" id="stage-regenerate" aria-label="Regenerate stage">
+      <section class="stage-panel" id="stage-regenerate" aria-labelledby="stage-tab-regenerate">
 
       <aside class="recipe-rail" aria-label="Generation recipe">
         <p class="recipe-rail-title">Generation recipe</p>
@@ -1879,11 +1932,10 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
         </p>
 
         <div class="recipe-rail-footer">
-          <span class="generate-key" role="img"
-                aria-label="Generate — new batch — accepted memory changed (recorded action)">
+          <div class="generate-key">
             <span class="generate-key-label">Generate</span>
             <span class="generate-key-subtitle">new batch — accepted memory changed</span>
-          </span>
+          </div>
           <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
         </div>
       </aside>
@@ -1991,7 +2043,7 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
       </section>
 
 
-      <section class="stage-panel" id="stage-trace" aria-label="Trace stage">
+      <section class="stage-panel" id="stage-trace" aria-labelledby="stage-tab-trace">
 
       <aside class="recipe-rail" aria-label="Generation recipe">
         <p class="recipe-rail-title">Generation recipe</p>
@@ -2047,11 +2099,10 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
         </p>
 
         <div class="recipe-rail-footer">
-          <span class="generate-key" role="img"
-                aria-label="Generate — new batch — accepted memory changed (recorded action)">
+          <div class="generate-key">
             <span class="generate-key-label">Generate</span>
             <span class="generate-key-subtitle">new batch — accepted memory changed</span>
-          </span>
+          </div>
           <p class="generate-key-reason">recorded action &mdash; this page is a static projection</p>
         </div>
       </aside>
@@ -2336,19 +2387,21 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
         <div class="history-grid">
           <section class="panel">
             <div class="panel-head"><p class="eyebrow">Session recap</p></div>
-            <table class="recap-table">
-              <thead><tr><th>batch</th><th>candidates</th><th>memory</th><th>memory fp</th><th>recipe fp</th></tr></thead>
-              <tbody>
-                <tr><td>01</td><td>3</td>
-                    <td>0 items</td>
-                    <td class="mono">fp_demo0001</td>
-                    <td class="mono">fp_demo0002</td></tr>
-                <tr><td>02</td><td>3</td>
-                    <td>4 items</td>
-                    <td class="mono">fp_demo0003</td>
-                    <td class="mono">fp_demo0004</td></tr>
-              </tbody>
-            </table>
+            <div class="table-scroll" role="region" aria-label="Session recap table" tabindex="0">
+              <table class="recap-table">
+                <thead><tr><th>batch</th><th>candidates</th><th>memory</th><th>memory fp</th><th>recipe fp</th></tr></thead>
+                <tbody>
+                  <tr><td>01</td><td>3</td>
+                      <td>0 items</td>
+                      <td class="mono">fp_demo0001</td>
+                      <td class="mono">fp_demo0002</td></tr>
+                  <tr><td>02</td><td>3</td>
+                      <td>4 items</td>
+                      <td class="mono">fp_demo0003</td>
+                      <td class="mono">fp_demo0004</td></tr>
+                </tbody>
+              </table>
+            </div>
             <p class="panel-note">Generated next batch from accepted memory.</p>
           </section>
           <section class="panel">
@@ -2485,10 +2538,30 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
       Manifold Studio &middot; Idea Search. Generated
       deterministically from source snapshot commit
       <span class="mono">82ed65dc01c2</span>.
+      Aligned to <a href="https://manifold-official.eduardo11.chatgpt.site">Manifold</a>
+      <span class="mono">brand@1.0.0</span>.
       &copy; 2026 Eduardo Cortes. All rights reserved.
     </p>
   </footer>
 </div>
 
+<script>
+  (() => {
+    const stageLinks = Array.from(document.querySelectorAll(".stage-tab"));
+    const syncCurrentStage = () => {
+      const requested = stageLinks.find((link) => link.hash === window.location.hash);
+      const current = requested || stageLinks[0];
+      stageLinks.forEach((link) => {
+        if (link === current) {
+          link.setAttribute("aria-current", "step");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    };
+    window.addEventListener("hashchange", syncCurrentStage);
+    syncCurrentStage();
+  })();
+</script>
 </body>
 </html>

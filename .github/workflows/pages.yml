@@ -30,6 +30,16 @@ jobs:
           fi
           sha256sum -c SHA256SUMS
 
+      - name: Verify canonical Manifold assets
+        run: |
+          set -euo pipefail
+          test "$(sha256sum manifold-mark.png | cut -d ' ' -f1)" = \
+            "29253c4af687e367234e03dd005b77285381589ed459a9c0e24ca21c9ff62cc4"
+          test "$(sha256sum favicon.png | cut -d ' ' -f1)" = \
+            "6b3d4998cc2083d22665aa36ab2042331ade3ae8032d002f8b23135d733a3261"
+          file manifold-mark.png | grep -F "234 x 181"
+          file favicon.png | grep -F "64 x 64"
+
       - name: Public-boundary check
         run: |
           set -euo pipefail
@@ -64,13 +74,33 @@ jobs:
           # this bundle is produced.
           exit "$fail"
 
+      - name: Stage explicit public allowlist
+        run: |
+          set -euo pipefail
+          mkdir -p _site/evidence/fixture/receipts
+          install -m 0644 .nojekyll _site/.nojekyll
+          install -m 0644 index.html _site/index.html
+          install -m 0644 favicon.png _site/favicon.png
+          install -m 0644 manifold-mark.png _site/manifold-mark.png
+          install -m 0644 social-preview-brand-v1.png _site/social-preview-brand-v1.png
+          install -m 0644 brand-provenance.json _site/brand-provenance.json
+          install -m 0644 evidence/manifest.json _site/evidence/manifest.json
+          install -m 0644 evidence/fixture/loop.json _site/evidence/fixture/loop.json
+          install -m 0644 evidence/fixture/receipts/memory_receipt_1.md \
+            _site/evidence/fixture/receipts/memory_receipt_1.md
+          install -m 0644 evidence/fixture/receipts/memory_receipt_2.md \
+            _site/evidence/fixture/receipts/memory_receipt_2.md
+          install -m 0644 evidence/fixture/receipts/session_receipt.md \
+            _site/evidence/fixture/receipts/session_receipt.md
+          test "$(find _site -type f | wc -l)" -eq 11
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
 
   deploy:
     needs: build
