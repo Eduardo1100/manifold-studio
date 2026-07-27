@@ -3,29 +3,29 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Manifold Studio · Idea Search</title>
+<title>Manifold Studio · Idea Search Engine</title>
 <meta name="description" content="Compare prompt candidates, explain what works, and decide what carries into the next round." />
 <link rel="canonical" href="https://eduardo1100.github.io/manifold-studio/" />
-<link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=c9572b6fbd06" />
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=6b3d4998cc20" />
 
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Manifold Studio · Idea Search" />
+<meta property="og:title" content="Manifold Studio · Idea Search Engine" />
 <meta property="og:description" content="Compare prompt candidates, explain what works, and decide what carries into the next round." />
 <meta property="og:url" content="https://eduardo1100.github.io/manifold-studio/" />
 <meta property="og:image" content="https://eduardo1100.github.io/manifold-studio/social-preview.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="Manifold Studio Idea Search — Compare prompt candidates, explain what works, and decide what carries into the next round." />
+<meta property="og:image:alt" content="Manifold Studio Idea Search Engine — Compare prompt candidates, explain what works, and decide what carries into the next round." />
 
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Manifold Studio · Idea Search" />
+<meta name="twitter:title" content="Manifold Studio · Idea Search Engine" />
 <meta name="twitter:description" content="Compare prompt candidates, explain what works, and decide what carries into the next round." />
 <meta name="twitter:image" content="https://eduardo1100.github.io/manifold-studio/social-preview.png" />
-<meta name="twitter:image:alt" content="Manifold Studio Idea Search — Compare prompt candidates, explain what works, and decide what carries into the next round." />
+<meta name="twitter:image:alt" content="Manifold Studio Idea Search Engine — Compare prompt candidates, explain what works, and decide what carries into the next round." />
 <style>
 
 /* ===========================================================================
-   Manifold Studio -- Idea Search showcase stylesheet.
+   Manifold Studio -- Idea Search Engine showcase stylesheet.
 
    Visual tokens below (palette, gradients, glow, typography, borders, button
    treatment, card surfaces) are the approved Manifold baseline, carried over
@@ -66,55 +66,50 @@
    =========================================================================== */
 
 :root {
-  /* Shell: deep navy/black. */
   --ink-1000: #04060f;
   --ink-950: #060915;
   --ink-900: #070b18;
   --ink-850: #0c1224;
   --ink-800: #101830;
-
-  /* Midnight borders. */
   --line: rgba(125, 155, 220, 0.13);
   --line-2: rgba(125, 155, 220, 0.22);
   --line-strong: rgba(125, 155, 220, 0.34);
-
   --text: #f2f6ff;
   --text-dim: #9fb0d0;
   --text-faint: #7d8fb3;
-
   --cyan: #22d3ee;
   --blue: #3b82f6;
   --violet: #8b5cf6;
+  --ember: #fc4c0d;
   --accent: var(--cyan);
   --accent-soft: rgba(34, 211, 238, 0.1);
-  --accent-line: rgba(59, 130, 246, 0.34);
+  --accent-line: rgba(34, 211, 238, 0.48);
 
-  /* Action gradient: darker than the mark gradient so white text clears
-     4.5:1 at both ends. */
-  --grad-action: linear-gradient(135deg, #2563eb 0%, #6d3ff0 55%, #7c3aed 100%);
-
+  /* Current Manifold action language: ink surface, cyan edge, ember depth.
+     Violet is reserved for focus/state distinction rather than decoration. */
+  --action-surface: #0e1a34;
+  --action-surface-hover: #14223f;
+  --action-surface-active: #0a1428;
+  --action-label: #f2f6ff;
+  --action-keyline: rgba(34, 211, 238, 0.56);
+  --action-keyline-strong: rgba(34, 211, 238, 0.9);
+  --action-underglow: 0 14px 28px -23px rgba(252, 76, 13, 0.92);
+  --selection-glow: 0 0 0 1px rgba(34, 211, 238, 0.12), 0 20px 42px -34px rgba(34, 211, 238, 0.62);
   --positive: #34d399;
   --negative: #fb7185;
-
   --font-display: "Iowan Old Style", Georgia, serif;
   --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
-
   --r-sm: 10px;
   --r-md: 13px;
   --r-lg: 16px;
   --r-pill: 999px;
-
   --shadow: 0 26px 60px -42px rgba(0, 0, 0, 0.95);
-  --glow: 0 0 0 1px rgba(59, 130, 246, 0.06), 0 18px 46px -34px rgba(37, 99, 235, 0.5);
-
+  --glow: 0 0 0 1px rgba(34, 211, 238, 0.05), 0 18px 46px -34px rgba(34, 211, 238, 0.38);
   --shell-max: 1680px;
   --gutter: clamp(14px, 2.4vw, 40px);
   --shell: min(var(--shell-max), calc(100% - var(--gutter) * 2));
-
-  /* Sticky offset = topbar height, so rails clear the two-level header. */
   --topbar-h: 5.9rem;
-
   color-scheme: dark;
 }
 
@@ -139,7 +134,7 @@ body {
 }
 
 a { color: var(--cyan); text-decoration: none; }
-a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 4px; }
+a:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; border-radius: 4px; }
 
 h1, h2, h3, h4 { letter-spacing: -0.024em; }
 
@@ -183,10 +178,21 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  overflow: hidden;
   background:
-    radial-gradient(58rem 30rem at 8% -10%, rgba(34, 211, 238, 0.1), transparent 62%),
-    radial-gradient(52rem 30rem at 78% -14%, rgba(124, 58, 237, 0.13), transparent 60%),
+    radial-gradient(58rem 32rem at 5% -8%, rgba(34, 211, 238, 0.12), transparent 62%),
+    radial-gradient(48rem 28rem at 86% -12%, rgba(252, 76, 13, 0.08), transparent 64%),
+    radial-gradient(42rem 22rem at 56% 112%, rgba(52, 211, 153, 0.035), transparent 70%),
     var(--ink-1000);
+}
+.app-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image: radial-gradient(rgba(242, 246, 255, 0.16) 0.5px, transparent 0.5px);
+  background-size: 5px 5px;
+  mask-image: linear-gradient(to bottom, black, transparent 36%);
 }
 
 /* ---- Two-level header (AppLayout.tsx) --------------------------------- */
@@ -221,16 +227,47 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
   letter-spacing: 0.01em;
 }
 
-.app-nav { margin-left: auto; display: flex; gap: 0.1rem; }
+.app-nav { margin-left: auto; display: flex; gap: 0.2rem; }
 .app-nav-link {
-  padding: 0.4rem 0.72rem;
-  border-radius: var(--r-sm);
+  position: relative;
+  padding: 0.45rem 0.78rem;
+  border-radius: var(--r-pill);
   color: var(--text-dim);
   font-size: 0.84rem;
-  font-weight: 500;
+  font-weight: 560;
   white-space: nowrap;
 }
-.app-nav-link:hover { color: var(--text); background: rgba(125, 155, 220, 0.09); }
+.app-nav-link:hover { color: var(--text); background: rgba(125, 155, 220, 0.08); }
+.app-nav-link.is-active { color: var(--text); background: rgba(34, 211, 238, 0.11); }
+.app-nav-link.is-active::after {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  bottom: 0.18rem;
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: var(--cyan);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
+}
+.app-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  flex: none;
+  padding: 0.32rem 0.65rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  color: var(--text-dim);
+  font-size: 0.74rem;
+}
+.app-status-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--positive);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.45);
+}
 
 /* Context row: inert chips, deliberately not dropdowns. */
 .context-row {
@@ -263,27 +300,24 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
 }
 .context-chip-value { color: var(--text-dim); font-size: 0.78rem; white-space: nowrap; }
 .context-chip:last-of-type .context-chip-value { color: var(--cyan); }
-.context-static {
-  flex: none;
-  color: var(--text-faint);
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
 .app-main { width: var(--shell); margin-inline: auto; padding: 1.1rem 0 3rem; }
 
-/* ---- Compact title band ------------------------------------------------ */
-.title-band { padding: 0.3rem 0 1rem; }
+/* ---- Current Manifold editorial title band ---------------------------- */
+.title-band {
+  padding: clamp(1.25rem, 3vw, 2.8rem) 0 1.35rem;
+  margin-bottom: 1.15rem;
+  border-bottom: 1px solid var(--line);
+}
 .title-band h1 {
-  margin: 0.45rem 0 0.4rem;
-  font-size: clamp(1.5rem, 2.2vw, 2rem);
-  font-weight: 600;
-  line-height: 1.12;
+  margin: 0.55rem 0 0.45rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 4vw, 3.45rem);
+  font-weight: 400;
+  line-height: 1.03;
+  letter-spacing: -0.035em;
   color: #fff;
 }
-.hero-sub { margin: 0 0 0.65rem; color: var(--text-dim); font-size: 0.95rem; max-width: 64ch; }
+.hero-sub { margin: 0 0 0.7rem; color: var(--text-dim); font-size: clamp(0.94rem, 1.3vw, 1.05rem); max-width: 62ch; }
 .method-link {
   display: inline-flex;
   align-items: center;
@@ -552,10 +586,11 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
   flex-direction: column;
   gap: 0.1rem;
   padding: 0.6rem 0.95rem;
+  border: 1px solid var(--action-keyline-strong);
   border-radius: var(--r-sm);
-  background: var(--grad-action);
-  color: #fff;
-  box-shadow: 0 14px 30px -20px rgba(59, 130, 246, 0.95);
+  background: var(--action-surface);
+  color: var(--action-label);
+  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.06), var(--action-underglow);
 }
 .generate-key-label { font-size: 0.9rem; font-weight: 650; }
 .generate-key-subtitle { font-size: 0.7rem; opacity: 0.86; }
@@ -616,6 +651,13 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   background: var(--ink-800);
+  transition: border-color 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+}
+.sheet-card:hover,
+.sheet-card:focus-within {
+  border-color: var(--action-keyline);
+  background: #111d36;
+  box-shadow: var(--selection-glow);
 }
 .sheet-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
 .sheet-card-id { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; color: var(--cyan); }
@@ -664,10 +706,10 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
   flex-direction: column;
   gap: 0.8rem;
   padding: 0.9rem;
-  border: 1px solid var(--line);
+  border: 1px solid var(--action-keyline-strong);
   border-radius: var(--r-lg);
-  background: var(--ink-850);
-  box-shadow: var(--shadow), var(--glow);
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.045), transparent 38%), var(--ink-850);
+  box-shadow: var(--shadow), var(--selection-glow);
 }
 .focused-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
 .focused-title { color: var(--text); font-size: 0.9rem; font-weight: 600; }
@@ -1075,25 +1117,28 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
   <header class="topbar">
     <div class="topbar-row">
       <a class="brand" href="#top" aria-label="Manifold Studio">
-        <img class="brand-mark" src="manifold-mark.png" alt="" width="32" height="26" decoding="async" />
+        <img class="brand-mark" src="manifold-mark.png" alt="" width="34" height="26" decoding="async" />
         <span class="brand-name">Manifold</span>
         <span class="brand-product">Studio</span>
       </a>
       <nav class="app-nav" aria-label="Studio sections">
-        <a class="app-nav-link" href="#loop">Idea Search</a><a class="app-nav-link" href="#memory">Memory</a><a class="app-nav-link" href="#history">History</a><a class="app-nav-link" href="#method">Method</a>
+        <a class="app-nav-link is-active" href="#loop">Idea Search Engine</a><a class="app-nav-link" href="#memory">Memory</a><a class="app-nav-link" href="#history">History</a><a class="app-nav-link" href="#method">Method</a>
       </nav>
+      <span class="app-status" aria-label="Read-only showcase">
+        <span class="app-status-dot" aria-hidden="true"></span>
+        Read-only
+      </span>
     </div>
     <div class="context-row" aria-label="Cockpit context (read-only)">
       <span class="context-chip"><span class="context-chip-key">workspace</span><span class="context-chip-value">Showcase Workspace</span></span><span class="context-chip"><span class="context-chip-key">project</span><span class="context-chip-value">Citrus Launch</span></span><span class="context-chip"><span class="context-chip-key">skill</span><span class="context-chip-value">Short Product Films</span></span><span class="context-chip"><span class="context-chip-key">target model</span><span class="context-chip-value">generic</span></span>
-      <span class="context-static">read-only</span>
     </div>
   </header>
 
   <main class="app-main">
 
     <section class="title-band">
-      <p class="eyebrow">Manifold Studio</p>
-      <h1>Idea Search</h1>
+      <p class="eyebrow">Creative direction</p>
+      <h1>Idea Search Engine</h1>
       <p class="hero-sub">Compare prompt candidates, explain what works, and decide what carries into the next round.</p>
       <a class="method-link" href="#method">Evidence and method<span aria-hidden="true">&rarr;</span></a>
     </section>
@@ -2379,7 +2424,7 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
               and do nothing.
             </p>
             <p class="disclosure">The model drafts prompts. You decide what carries forward.</p>
-            <p class="disclosure">Idea Search is the Manifold Studio presentation of the system originally developed as Subjective Skill Studio.</p>
+            <p class="disclosure">Idea Search Engine is the Manifold Studio presentation of the system originally developed as Subjective Skill Studio.</p>
             <p class="disclosure">This showcase presents the pre-participation Subjective Skill Studio system within the Manifold product family. Its deterministic evidence remains tied to the audited source snapshot; later Manifold participation features are not represented here.</p>
           </section>
 
@@ -2482,7 +2527,7 @@ h1, h2, h3, h4 { letter-spacing: -0.024em; }
 
   <footer class="site-footer">
     <p>
-      Manifold Studio &middot; Idea Search. Generated
+      Manifold Studio &middot; Idea Search Engine. Generated
       deterministically from source snapshot commit
       <span class="mono">82ed65dc01c2</span>.
       &copy; 2026 Eduardo Cortes. All rights reserved.
